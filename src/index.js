@@ -72,6 +72,8 @@ root.render(
       signUpFallbackRedirectUrl="/"
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
+      domain="prompt-perfector.com"
+      isSatellite={false}
       navigate={(to) => {
         console.log('Clerk navigate called:', to);
         window.history.pushState({}, '', to);

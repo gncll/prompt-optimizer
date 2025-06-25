@@ -370,6 +370,17 @@ function MainApp() {
       timestamp: new Date().toISOString()
     });
     
+    // Debug session and user details
+    if (isLoaded) {
+      console.log('Clerk Session Debug:', {
+        hasSession: !!window.Clerk?.session,
+        sessionId: window.Clerk?.session?.id,
+        sessionStatus: window.Clerk?.session?.status,
+        userObject: !!user,
+        clerkLoaded: !!window.Clerk
+      });
+    }
+    
     // Force re-render when authentication state changes
     if (isLoaded && isSignedIn && user) {
       console.log('User successfully authenticated:', user.id);
