@@ -61,7 +61,8 @@ const FreeTrial = () => {
       const result = await FreeTrialService.optimizePrompt(trialPrompt);
       
       setTrialOptimized(result);
-      FreeTrialService.incrementTrialCount();
+      const newCount = FreeTrialService.incrementTrialCount();
+      setTrialCount(newCount);
     } catch (error) {
       console.error('Trial optimization error:', error);
       setTrialOptimized(error.message);
@@ -526,6 +527,33 @@ function App() {
               </div>
             </div>
           </SignedIn>
+        </div>
+      </header>
+              
+              <SignedIn>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="useAI"
+                    checked={useAI}
+                    onChange={(e) => setUseAI(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="useAI" className="text-sm font-medium text-gray-700">
+                    Use AI Optimization
+                  </label>
+                </div>
+                {availableProviders.length > 0 && (
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-xs text-green-600">
+                      {availableProviders.map(getProviderDisplayName).join(', ')} Connected
+                    </span>
+                  </div>
+                )}
+              </SignedIn>
+            </div>
+          </div>
         </div>
       </header>
 
