@@ -118,7 +118,7 @@ const HeroSection = () => {
           </h1>
           
           <p className="text-xl md:text-2xl text-gray-600 mb-12 leading-relaxed">
-            You've experienced the power of AI optimization.<br/>
+            You've experienced the power of AI perfection.<br/>
             <span className="text-blue-600 font-semibold">Sign in to unlock unlimited potential</span>
           </p>
           
@@ -129,7 +129,7 @@ const HeroSection = () => {
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Unlimited Optimizations</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">Unlimited Perfections</h3>
               <p className="text-sm text-gray-600">No more limits on your creativity</p>
             </div>
             
@@ -187,13 +187,13 @@ const HeroSection = () => {
               Your AI Companion To<br/>
               Help You </span>
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Optimize Anything
+              Perfect Anything
             </span>
           </h1>
           
           <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
             Transform your prompts with advanced AI techniques.<br/>
-            <span className="text-blue-600 font-semibold">Experience the power of optimization in seconds.</span>
+            <span className="text-blue-600 font-semibold">Experience the power of perfection in seconds.</span>
           </p>
         </div>
 
@@ -213,14 +213,14 @@ const HeroSection = () => {
               disabled={isTrialLoading || !trialPrompt.trim() || !FreeTrialService.hasTrialsLeft()}
               className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
             >
-              {isTrialLoading ? 'Optimizing with GPT-4o Mini...' : '🚀 Optimize My Prompt'}
+              {isTrialLoading ? 'Perfecting with GPT-4o Mini...' : '✨ Perfect My Prompt'}
             </button>
           </div>
 
           {/* Output */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-800">Optimized Result</h3>
+              <h3 className="text-2xl font-bold text-gray-800">Perfected Result</h3>
               {trialOptimized && !isTrialLoading && (
                 <button
                   onClick={copyTrialResult}
@@ -235,7 +235,7 @@ const HeroSection = () => {
                 <div className="flex items-center justify-center h-[192px]">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <div className="text-gray-600 font-medium">Optimizing with GPT-4o Mini...</div>
+                    <div className="text-gray-600 font-medium">Perfecting with GPT-4o Mini...</div>
                   </div>
                 </div>
               ) : trialOptimized ? (
@@ -246,7 +246,7 @@ const HeroSection = () => {
                 <div className="flex items-center justify-center h-[192px] text-gray-500">
                   <div className="text-center">
                     <div className="text-4xl mb-4">✨</div>
-                    <div className="text-lg font-medium">Your optimized prompt will appear here</div>
+                    <div className="text-lg font-medium">Your perfected prompt will appear here</div>
                   </div>
                 </div>
               )}
@@ -257,7 +257,7 @@ const HeroSection = () => {
         {/* Features Preview */}
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">Want More? Sign In for Full Access</h2>
-          <p className="text-xl text-gray-600 mb-12">Unlock the complete suite of AI optimization tools</p>
+          <p className="text-xl text-gray-600 mb-12">Unlock the complete suite of AI perfection tools</p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20">
@@ -277,7 +277,7 @@ const HeroSection = () => {
                 </svg>
               </div>
               <h4 className="text-xl font-bold text-gray-800 mb-4">Advanced Techniques</h4>
-              <p className="text-gray-600">Chain-of-thought, few-shot, role prompting, and RAG optimization</p>
+              <p className="text-gray-600">Chain-of-thought, few-shot, role prompting, and RAG perfection</p>
             </div>
             
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20">
@@ -303,16 +303,16 @@ const HeroSection = () => {
           <h2 className="text-4xl font-bold text-gray-900 mb-12 text-center">Frequently Asked Questions</h2>
           <div className="space-y-6">
             <FAQItem 
-              question="What is prompt optimization?"
-              answer="Prompt optimization improves your AI prompts using proven techniques like zero-shot, few-shot, and chain-of-thought to get better, more consistent results from AI models."
+              question="What is prompt perfection?"
+              answer="Prompt perfection improves your AI prompts using proven techniques like zero-shot, few-shot, and chain-of-thought to get better, more consistent results from AI models."
             />
             <FAQItem 
               question="How does the free trial work?"
-              answer="You get 10 free prompt optimizations using GPT-4o Mini. No sign-up required! After 10 trials, sign in for unlimited access to all models and advanced features."
+              answer="You get 10 free prompt perfections using GPT-4o Mini. No sign-up required! After 10 trials, sign in for unlimited access to all models and advanced features."
             />
             <FAQItem 
               question="What AI models do you support?"
-              answer="We support OpenAI models (GPT-4, GPT-4o, GPT-4o Mini, GPT-3.5) and Anthropic Claude models (Claude 4, Claude 3.5 Sonnet) for comprehensive prompt optimization."
+              answer="We support OpenAI models (GPT-4, GPT-4o, GPT-4o Mini, GPT-3.5) and Anthropic Claude models (Claude 4, Claude 3.5 Sonnet) for comprehensive prompt perfection."
             />
             <FAQItem 
               question="Is my data secure?"
@@ -324,16 +324,16 @@ const HeroSection = () => {
         {/* Contact Section */}
         <div id="contact" className="bg-white/80 backdrop-blur-sm rounded-2xl p-12 text-center border border-white/20 shadow-xl">
           <h2 className="text-4xl font-bold text-gray-900 mb-6">Need Help or Have Questions?</h2>
-          <p className="text-xl text-gray-600 mb-8">We're here to help you get the most out of your prompt optimization experience.</p>
+          <p className="text-xl text-gray-600 mb-8">We're here to help you get the most out of your prompt perfection experience.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 
-              href="mailto:support@promptoptimizer.ai" 
+              href="mailto:support@promptperfector.ai" 
               className="bg-white hover:bg-gray-50 text-gray-800 px-8 py-4 rounded-xl font-semibold transition-colors border-2 border-gray-200 hover:border-gray-300"
             >
               📧 Email Support
             </a>
             <a 
-              href="https://twitter.com/promptoptimizer" 
+              href="https://twitter.com/promptperfector" 
               target="_blank" 
               rel="noopener noreferrer"
               className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold transition-colors"
@@ -519,7 +519,7 @@ function App() {
               <div className="relative">
                 <img 
                   src="/logo.png" 
-                  alt="Prompt Optimizer Logo" 
+                  alt="Prompt Perfector Logo" 
                   className="h-12 w-12 rounded-lg object-contain bg-white shadow-sm border"
                   onError={(e) => {
                     console.log('Logo failed to load, showing fallback');
@@ -536,8 +536,8 @@ function App() {
                 </div>
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Prompt Optimizer</h1>
-                <p className="text-xs text-gray-600 hidden sm:block">Transform your prompts with AI</p>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Prompt Perfector</h1>
+                <p className="text-xs text-gray-600 hidden sm:block">Perfect your prompts with AI</p>
               </div>
             </div>
 
@@ -570,8 +570,8 @@ function App() {
         <SafeSignedIn>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">AI-Powered Prompt Optimization</h2>
-              <p className="text-gray-600 mb-6">Welcome back! You have unlimited access to all optimization features.</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">AI-Powered Prompt Perfection</h2>
+              <p className="text-gray-600 mb-6">Welcome back! You have unlimited access to all perfection features.</p>
               
               {/* AI Configuration */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 mb-6">
@@ -585,7 +585,7 @@ function App() {
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
                     <label htmlFor="useAI" className="text-sm font-medium text-gray-700">
-                      Use AI Optimization
+                      Use AI Perfection
                     </label>
                   </div>
                   {availableProviders.length > 0 && (
@@ -599,17 +599,309 @@ function App() {
                 </div>
               </div>
               
-              {/* Rest of the signed-in interface would go here */}
-              <div className="text-center py-20">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Full Interface Coming Soon</h3>
-                <p className="text-gray-600">The complete optimization interface for signed-in users is being finalized.</p>
-              </div>
-            </div>
-          </div>
-        </SafeSignedIn>
-      </main>
-    </div>
-  );
-}
+                             {/* Provider Selection */}
+               {useAI && availableProviders.length > 0 && (
+                 <div className="mb-6">
+                   <label className="block text-sm font-medium text-gray-700 mb-3">
+                     Choose Your AI Provider
+                   </label>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                     {availableProviders.map((provider) => (
+                       <button
+                         key={provider}
+                         onClick={() => handleProviderChange(provider)}
+                         className={`group relative p-4 rounded-xl border-2 text-sm font-medium transition-all duration-200 ${
+                           selectedProvider === provider
+                             ? 'border-blue-300 bg-white shadow-lg transform scale-105'
+                             : 'border-gray-200 bg-white/50 hover:border-blue-200 hover:bg-white hover:shadow-md'
+                         }`}
+                       >
+                         <div className="flex items-center space-x-3">
+                           {provider === AI_PROVIDERS.OPENAI ? (
+                             <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                               <span className="text-white font-bold text-xs">AI</span>
+                             </div>
+                           ) : (
+                             <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                               <span className="text-white font-bold text-xs">C</span>
+                             </div>
+                           )}
+                           <div className="text-left">
+                             <div className={`font-semibold ${selectedProvider === provider ? 'text-blue-700' : 'text-gray-700'}`}>
+                               {getProviderDisplayName(provider)}
+                             </div>
+                             <div className="text-xs text-gray-500">
+                               {provider === AI_PROVIDERS.OPENAI ? 'GPT Models' : 'Claude Models'}
+                             </div>
+                           </div>
+                         </div>
+                         {selectedProvider === provider && (
+                           <div className="absolute top-2 right-2">
+                             <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                           </div>
+                         )}
+                       </button>
+                     ))}
+                   </div>
+                 </div>
+               )}
 
-export default App;
+               {/* Model Selection */}
+               {useAI && availableModels.length > 0 && (
+                 <div className="mb-6">
+                   <label className="block text-sm font-medium text-gray-700 mb-3">
+                     Select Model
+                   </label>
+                   <div className="relative">
+                     <select
+                       value={selectedModel}
+                       onChange={(e) => setSelectedModel(e.target.value)}
+                       className="w-full p-4 pr-10 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white shadow-sm appearance-none"
+                     >
+                       {availableModels.map((model) => (
+                         <option key={model.id} value={model.id}>
+                           {model.name} - {model.description}
+                         </option>
+                       ))}
+                     </select>
+                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                       <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                       </svg>
+                     </div>
+                   </div>
+                 </div>
+               )}
+             </div>
+
+             {/* Main Interface */}
+             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+               {/* Left Panel - Input */}
+               <div className="space-y-6">
+                 <div className="bg-white rounded-lg shadow-sm border p-6">
+                   <h2 className="text-lg font-semibold text-gray-800 mb-4">Raw Prompt</h2>
+                   <textarea
+                     className="w-full h-64 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                     placeholder="Enter your raw prompt here..."
+                     value={rawPrompt}
+                     onChange={(e) => setRawPrompt(e.target.value)}
+                   />
+                   
+                   {/* Feedback Examples */}
+                   <div className="mt-4 space-y-3">
+                     {/* Positive Feedback */}
+                     <div className="border border-green-200 rounded-lg">
+                       <button
+                         onClick={() => setShowPositiveFeedback(!showPositiveFeedback)}
+                         className="w-full flex items-center justify-between p-3 text-left hover:bg-green-50 transition-colors rounded-lg"
+                       >
+                         <div className="flex items-center space-x-2">
+                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                           <span className="font-medium text-green-800">Positive Output Examples</span>
+                         </div>
+                         <div className={`transform transition-transform ${showPositiveFeedback ? 'rotate-180' : ''}`}>
+                           <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                           </svg>
+                         </div>
+                       </button>
+                       {showPositiveFeedback && (
+                         <div className="px-3 pb-3">
+                           <textarea
+                             className="w-full h-24 p-3 border border-green-300 rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm"
+                             placeholder="Describe what good outputs should look like..."
+                             value={positiveExamples}
+                             onChange={(e) => setPositiveExamples(e.target.value)}
+                           />
+                         </div>
+                       )}
+                     </div>
+
+                     {/* Negative Feedback */}
+                     <div className="border border-red-200 rounded-lg">
+                       <button
+                         onClick={() => setShowNegativeFeedback(!showNegativeFeedback)}
+                         className="w-full flex items-center justify-between p-3 text-left hover:bg-red-50 transition-colors rounded-lg"
+                       >
+                         <div className="flex items-center space-x-2">
+                           <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                           <span className="font-medium text-red-800">Negative Output Examples</span>
+                         </div>
+                         <div className={`transform transition-transform ${showNegativeFeedback ? 'rotate-180' : ''}`}>
+                           <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                           </svg>
+                         </div>
+                       </button>
+                       {showNegativeFeedback && (
+                         <div className="px-3 pb-3">
+                           <textarea
+                             className="w-full h-24 p-3 border border-red-300 rounded-lg resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none text-sm"
+                             placeholder="Describe what bad outputs look like and should be avoided..."
+                             value={negativeExamples}
+                             onChange={(e) => setNegativeExamples(e.target.value)}
+                           />
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Optimization Techniques */}
+                 <div className="bg-white rounded-lg shadow-sm border p-6">
+                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Perfection Techniques</h3>
+                   <div className="space-y-3">
+                     {Object.entries(techniques).map(([key, technique]) => (
+                       <label key={key} className="flex items-start space-x-3 cursor-pointer">
+                         <input
+                           type="checkbox"
+                           className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                           checked={selectedTechniques.includes(key)}
+                           onChange={() => handleTechniqueToggle(key)}
+                           disabled={useAI && selectedTechniques.length === 1 && selectedTechniques.includes(key)}
+                         />
+                         <div className="flex-1">
+                           <div className="font-medium text-gray-900 text-sm">{technique.name}</div>
+                           <div className="text-xs text-gray-600">{technique.description}</div>
+                         </div>
+                       </label>
+                     ))}
+                   </div>
+                   
+                   {useAI && selectedTechniques.length > 1 && (
+                     <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                       <p className="text-sm text-yellow-800">
+                         AI perfection uses only the first selected technique. Multiple techniques are used for template-based perfection only.
+                       </p>
+                     </div>
+                   )}
+                   
+                   <button
+                     onClick={generateOptimizedPrompt}
+                     disabled={isLoading}
+                     className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                     {isLoading ? 'Perfecting...' : '✨ Perfect Prompt'}
+                   </button>
+                 </div>
+               </div>
+
+               {/* Right Panel - Output */}
+               <div className="space-y-6">
+                 {/* Perfected Prompt Section */}
+                 <div className="bg-white rounded-lg shadow-sm border p-6">
+                   <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-lg font-semibold text-gray-800">Perfected Prompt</h2>
+                     {optimizedPrompt && !isLoading && (
+                       <button
+                         onClick={copyToClipboard}
+                         className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors"
+                       >
+                         📋 Copy
+                       </button>
+                     )}
+                   </div>
+                   
+                   <div className="min-h-[250px]">
+                     {isLoading ? (
+                       <div className="flex items-center justify-center h-full">
+                         <div className="text-center">
+                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                           <div className="text-gray-600">
+                             Perfecting with {getProviderDisplayName(selectedProvider)} {selectedModel}...
+                           </div>
+                         </div>
+                       </div>
+                     ) : optimizedPrompt ? (
+                       <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 p-4 rounded-lg h-full overflow-auto">
+                         {optimizedPrompt}
+                       </pre>
+                     ) : (
+                       <div className="flex items-center justify-center h-full text-gray-500">
+                         <div className="text-center">
+                           <div className="text-3xl mb-2">✨</div>
+                           <div className="text-base">Your perfected prompt will appear here</div>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 </div>
+
+                 {/* Test Prompt Section */}
+                 {optimizedPrompt && !isLoading && (
+                   <div className="bg-white rounded-lg shadow-sm border p-6">
+                     <div className="flex justify-between items-center mb-4">
+                       <h2 className="text-lg font-semibold text-gray-800">Test Prompt</h2>
+                       {testOutput && !isTestLoading && (
+                         <button
+                           onClick={copyTestOutput}
+                           className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors"
+                         >
+                           📋 Copy Output
+                         </button>
+                       )}
+                     </div>
+                     
+                     {/* Test Input */}
+                     <div className="mb-4">
+                       <label className="block text-sm font-medium text-gray-700 mb-2">
+                         Test Input
+                       </label>
+                       <textarea
+                         className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                         placeholder="Enter your test input here..."
+                         value={testInput}
+                         onChange={(e) => setTestInput(e.target.value)}
+                       />
+                     </div>
+
+                     {/* Test Button */}
+                     <button
+                       onClick={testOptimizedPrompt}
+                       disabled={isTestLoading || !testInput.trim()}
+                       className="w-full mb-4 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                     >
+                       {isTestLoading ? 'Testing...' : '🧪 Test Prompt'}
+                     </button>
+
+                     {/* Test Output */}
+                     <div>
+                       <label className="block text-sm font-medium text-gray-700 mb-2">
+                         Test Output
+                       </label>
+                       <div className="min-h-[150px] border border-gray-300 rounded-lg">
+                         {isTestLoading ? (
+                           <div className="flex items-center justify-center h-[150px]">
+                             <div className="text-center">
+                               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto mb-2"></div>
+                               <div className="text-gray-600 text-sm">
+                                 Testing with {getProviderDisplayName(selectedProvider)} {selectedModel}...
+                               </div>
+                             </div>
+                           </div>
+                         ) : testOutput ? (
+                           <div className="text-sm text-gray-800 bg-gray-50 p-4 rounded-lg h-full overflow-auto">
+                             {testOutput}
+                           </div>
+                         ) : (
+                           <div className="flex items-center justify-center h-[150px] text-gray-500">
+                             <div className="text-center">
+                               <div className="text-xl mb-1">🧪</div>
+                               <div className="text-sm">Test output will appear here</div>
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                   </div>
+                 )}
+               </div>
+             </div>
+           </div>
+         </SafeSignedIn>
+       </main>
+     </div>
+   );
+ }
+
+ export default App;
