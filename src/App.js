@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { SignedIn, SignedOut, SignInButton, UserButton, SignIn, SignUp } from '@clerk/clerk-react';
 import './App.css';
 import { zeroShotTechnique } from './techniques/zeroShot';
 import { fewShotTechnique } from './techniques/fewShot';
@@ -360,7 +360,7 @@ const techniques = {
   'rag': ragTechnique
 };
 
-function App() {
+function MainApp() {
   const [rawPrompt, setRawPrompt] = useState('');
   const [selectedTechniques, setSelectedTechniques] = useState(['zero-shot']);
   const [optimizedPrompt, setOptimizedPrompt] = useState('');
@@ -469,19 +469,25 @@ function App() {
       return;
     }
 
-    if (!AIService.isProviderAvailable(selectedProvider)) {
-      setTestOutput(`${selectedProvider} API is not configured. Please contact the administrator.`);
+    // Always use OpenAI GPT-4o for testing, regardless of selected provider
+    if (!AIService.isProviderAvailable(AI_PROVIDERS.OPENAI)) {
+      setTestOutput('OpenAI API is not configured. Please contact the administrator.');
       return;
     }
 
     setIsTestLoading(true);
 
     try {
-      // Use the optimized prompt as system prompt and test input as user prompt
+      // Create a modified prompt that encourages concise responses
+      const testSystemPrompt = `${optimizedPrompt}
+
+IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences maximum unless the task specifically requires a longer response.`;
+
+      // Always use GPT-4o for testing
       const result = await AIService.generateCompletion(
-        selectedProvider,
-        selectedModel,
-        optimizedPrompt, // Use optimized prompt as system prompt
+        AI_PROVIDERS.OPENAI,
+        'gpt-4o', // Force GPT-4o for testing
+        testSystemPrompt, // Use enhanced prompt with conciseness instruction
         testInput // Use test input as user prompt
       );
       
@@ -544,14 +550,21 @@ function App() {
             {/* Navigation */}
             <div className="flex items-center space-x-4">
               <SafeSignedIn>
-                <SafeUserButton afterSignOutUrl="/" />
+                <SafeUserButton 
+                  afterSignOutUrl="/" 
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-8 h-8",
+                    }
+                  }}
+                />
               </SafeSignedIn>
               
               <SafeSignedOut>
                 <div className="text-sm text-gray-600 bg-white/50 px-3 py-1 rounded-full">
                   {FreeTrialService.getRemainingTrials()} free trials left
                 </div>
-                <SafeSignInButton>
+                <SafeSignInButton mode="modal">
                   <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105">
                     Sign In
                   </button>
@@ -829,9 +842,12 @@ function App() {
 
                  {/* Test Prompt Section */}
                  {optimizedPrompt && !isLoading && (
-                   <div className="bg-white rounded-lg shadow-sm border p-6">
-                     <div className="flex justify-between items-center mb-4">
-                       <h2 className="text-lg font-semibold text-gray-800">Test Prompt</h2>
+                                       <div className="bg-white rounded-lg shadow-sm border p-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <div>
+                          <h2 className="text-lg font-semibold text-gray-800">Test Prompt</h2>
+                          <p className="text-xs text-gray-500 mt-1">Always uses GPT-4o for concise testing</p>
+                        </div>
                        {testOutput && !isTestLoading && (
                          <button
                            onClick={copyTestOutput}
@@ -871,14 +887,14 @@ function App() {
                        </label>
                        <div className="min-h-[150px] border border-gray-300 rounded-lg">
                          {isTestLoading ? (
-                           <div className="flex items-center justify-center h-[150px]">
-                             <div className="text-center">
-                               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto mb-2"></div>
-                               <div className="text-gray-600 text-sm">
-                                 Testing with {getProviderDisplayName(selectedProvider)} {selectedModel}...
-                               </div>
-                             </div>
-                           </div>
+                                                       <div className="flex items-center justify-center h-[150px]">
+                              <div className="text-center">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto mb-2"></div>
+                                <div className="text-gray-600 text-sm">
+                                  Testing with GPT-4o (concise mode)...
+                                </div>
+                              </div>
+                            </div>
                          ) : testOutput ? (
                            <div className="text-sm text-gray-800 bg-gray-50 p-4 rounded-lg h-full overflow-auto">
                              {testOutput}
@@ -901,6 +917,52 @@ function App() {
          </SafeSignedIn>
        </main>
      </div>
+   );
+ }
+
+ // Main App component with routing
+ function App() {
+   return (
+     <Router>
+       <Routes>
+         <Route path="/sign-in" element={
+           <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+             <SignIn 
+               routing="path" 
+               path="/sign-in" 
+               redirectUrl="/"
+               appearance={{
+                 elements: {
+                   rootBox: "mx-auto",
+                   card: "shadow-xl border-0 rounded-2xl",
+                 }
+               }}
+             />
+           </div>
+         } />
+         
+         <Route path="/sign-up" element={
+           <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+             <SignUp 
+               routing="path" 
+               path="/sign-up" 
+               redirectUrl="/"
+               appearance={{
+                 elements: {
+                   rootBox: "mx-auto",
+                   card: "shadow-xl border-0 rounded-2xl",
+                 }
+               }}
+             />
+           </div>
+         } />
+         
+         <Route path="/" element={<MainApp />} />
+         
+         {/* Redirect any unknown routes to home */}
+         <Route path="*" element={<Navigate to="/" replace />} />
+       </Routes>
+     </Router>
    );
  }
 
