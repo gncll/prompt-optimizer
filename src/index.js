@@ -35,12 +35,27 @@ function DebugWrapper({ children }) {
       console.log('Clerk: User changed', user ? 'User exists' : 'No user', user?.id);
     };
     
+    const handleSessionChanged = (session) => {
+      console.log('Clerk: Session changed', session ? 'Session exists' : 'No session', session?.id);
+    };
+    
+    // More comprehensive event listening
     window.addEventListener('clerk:ready', handleClerkReady);
     window.addEventListener('clerk:user', handleUserChanged);
+    window.addEventListener('clerk:session', handleSessionChanged);
+    
+    // Also check if Clerk is already loaded
+    if (window.Clerk) {
+      console.log('Clerk already available:', {
+        user: window.Clerk.user ? 'User exists' : 'No user',
+        session: window.Clerk.session ? 'Session exists' : 'No session'
+      });
+    }
     
     return () => {
       window.removeEventListener('clerk:ready', handleClerkReady);
       window.removeEventListener('clerk:user', handleUserChanged);
+      window.removeEventListener('clerk:session', handleSessionChanged);
     };
   }, []);
   
@@ -57,6 +72,11 @@ root.render(
       signUpFallbackRedirectUrl="/"
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
+      navigate={(to) => {
+        console.log('Clerk navigate called:', to);
+        window.history.pushState({}, '', to);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }}
     >
       <DebugWrapper>
         <App />

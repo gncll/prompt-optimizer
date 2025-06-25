@@ -349,7 +349,28 @@ function MainApp() {
       userEmail: user?.primaryEmailAddress?.emailAddress,
       timestamp: new Date().toISOString()
     });
+    
+    // Force re-render when authentication state changes
+    if (isLoaded && isSignedIn && user) {
+      console.log('User successfully authenticated:', user.id);
+      // Trigger a state update to ensure UI refreshes
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
+    }
   }, [isLoaded, isSignedIn, user]);
+
+  // Show loading state while Clerk is initializing
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="text-gray-600">Loading authentication...</div>
+        </div>
+      </div>
+    );
+  }
 
   const [rawPrompt, setRawPrompt] = useState('');
   const [selectedTechniques, setSelectedTechniques] = useState(['zero-shot']);
