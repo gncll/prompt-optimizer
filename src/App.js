@@ -474,9 +474,6 @@ function App() {
                 src="/logo.png" 
                 alt="Prompt Optimizer Logo" 
                 className="h-12 w-12 rounded-lg object-contain bg-white shadow-sm border"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
               />
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Prompt Optimizer</h1>
