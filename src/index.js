@@ -52,8 +52,9 @@ root.render(
   <React.StrictMode>
     <ClerkProvider 
       publishableKey={PUBLISHABLE_KEY}
-      afterSignInUrl="/"
-      afterSignUpUrl="/"
+      fallbackRedirectUrl="/"
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
     >
