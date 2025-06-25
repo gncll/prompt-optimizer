@@ -10,6 +10,30 @@ import { ragTechnique } from './techniques/rag';
 import { AIService, AI_PROVIDERS, AVAILABLE_MODELS } from './services/aiService';
 import { FreeTrialService } from './services/freeTrialService';
 
+// Check if Clerk is available
+const CLERK_AVAILABLE = !!process.env.REACT_APP_CLERK_PUBLISHABLE_KEY;
+
+// Safe Clerk components that work even when Clerk is not available
+const SafeSignedIn = ({ children }) => {
+  if (!CLERK_AVAILABLE) return null;
+  return <SignedIn>{children}</SignedIn>;
+};
+
+const SafeSignedOut = ({ children }) => {
+  if (!CLERK_AVAILABLE) return children;
+  return <SignedOut>{children}</SignedOut>;
+};
+
+const SafeSignInButton = ({ children }) => {
+  if (!CLERK_AVAILABLE) return null;
+  return <SignInButton>{children}</SignInButton>;
+};
+
+const SafeUserButton = (props) => {
+  if (!CLERK_AVAILABLE) return null;
+  return <UserButton {...props} />;
+};
+
 // FAQ Item Component
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -107,11 +131,11 @@ const FreeTrial = () => {
               Advanced techniques & feedback
             </div>
           </div>
-          <SignInButton>
+          <SafeSignInButton>
             <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-lg text-lg font-medium transition-all transform hover:scale-105">
               Sign In for Full Access
             </button>
-          </SignInButton>
+          </SafeSignInButton>
         </div>
       </div>
     );
@@ -223,11 +247,11 @@ const FreeTrial = () => {
             <p className="text-sm text-gray-600">Test prompts and provide feedback for better results</p>
           </div>
         </div>
-                 <SignInButton>
+                 <SafeSignInButton>
            <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-lg text-lg font-medium transition-all transform hover:scale-105">
              Sign In for Full Access
            </button>
-         </SignInButton>
+         </SafeSignInButton>
        </div>
 
        {/* FAQ Section */}
@@ -272,11 +296,11 @@ const FreeTrial = () => {
            >
              🐦 Follow Us
            </a>
-           <SignInButton>
-             <button className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-               💬 Join Community
-             </button>
-           </SignInButton>
+                       <SafeSignInButton>
+              <button className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                💬 Join Community
+              </button>
+            </SafeSignInButton>
          </div>
        </div>
      </div>
@@ -449,7 +473,10 @@ function App() {
               <img 
                 src="/logo.png" 
                 alt="Prompt Optimizer Logo" 
-                className="h-10 w-auto"
+                className="h-12 w-12 rounded-lg object-contain bg-white shadow-sm border"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
               />
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Prompt Optimizer</h1>
@@ -477,28 +504,28 @@ function App() {
               
               {/* Sign In Button */}
               <div className="flex items-center">
-                <SignedOut>
-                  <SignInButton>
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                      Sign In
-                    </button>
-                  </SignInButton>
-                </SignedOut>
-                <SignedIn>
-                  <UserButton 
+                                <SafeSignedOut>
+                   <SafeSignInButton>
+                     <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                       Sign In
+                     </button>
+                   </SafeSignInButton>
+                 </SafeSignedOut>
+                <SafeSignedIn>
+                  <SafeUserButton 
                     appearance={{
                       elements: {
                         avatarBox: "w-8 h-8"
                       }
                     }}
                   />
-                </SignedIn>
+                </SafeSignedIn>
               </div>
             </div>
           </div>
           
           {/* AI Configuration for signed-in users */}
-          <SignedIn>
+          <SafeSignedIn>
             <div className="mt-3 pt-3 border-t border-gray-100">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <div className="flex items-center space-x-4">
@@ -525,16 +552,16 @@ function App() {
                 </div>
               </div>
             </div>
-          </SignedIn>
+          </SafeSignedIn>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <SignedOut>
+        <SafeSignedOut>
           <FreeTrial />
-        </SignedOut>
+        </SafeSignedOut>
         
-        <SignedIn>
+        <SafeSignedIn>
         <div className="flex flex-col xl:flex-row gap-6 h-full">
           {/* Left Panel - Input */}
           <div className="flex-1 space-y-4">
@@ -842,7 +869,7 @@ function App() {
             )}
           </div>
         </div>
-        </SignedIn>
+        </SafeSignedIn>
       </main>
     </div>
   );
