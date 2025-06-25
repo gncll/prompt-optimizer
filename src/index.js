@@ -5,12 +5,21 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { ClerkProvider } from '@clerk/clerk-react';
 
-// Import your Clerk Publishable Key
+// Import your Clerk Publishable Key - check REACT_APP_ first for React apps
 const PUBLISHABLE_KEY = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 if (!PUBLISHABLE_KEY) {
-  throw new Error('Missing Publishable Key')
+  throw new Error(`Missing Publishable Key. 
+    Please set REACT_APP_CLERK_PUBLISHABLE_KEY in your environment variables.
+    Current env keys: ${Object.keys(process.env).filter(key => key.includes('CLERK')).join(', ')}`)
 }
+
+console.log('Clerk Environment Check:', {
+  hasReactKey: !!process.env.REACT_APP_CLERK_PUBLISHABLE_KEY,
+  hasNextKey: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  usingKey: PUBLISHABLE_KEY?.substring(0, 20) + '...',
+  allClerkKeys: Object.keys(process.env).filter(key => key.includes('CLERK'))
+});
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
