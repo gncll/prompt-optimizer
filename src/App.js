@@ -580,6 +580,12 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
           <HeroSection />
         </SafeSignedOut>
         
+                 {/* Debug info */}
+         <div style={{position: 'fixed', top: '100px', right: '10px', background: 'red', color: 'white', padding: '10px', zIndex: 9999, fontSize: '12px'}}>
+           NEXT_PUBLIC: {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? 'Found' : 'Missing'}<br/>
+           REACT_APP: {process.env.REACT_APP_CLERK_PUBLISHABLE_KEY ? 'Found' : 'Missing'}
+         </div>
+        
         <SafeSignedIn>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
