@@ -21,11 +21,45 @@ console.log('Clerk Environment Check:', {
   allClerkKeys: Object.keys(process.env).filter(key => key.includes('CLERK'))
 });
 
+// Add debugging wrapper
+function DebugWrapper({ children }) {
+  React.useEffect(() => {
+    console.log('DebugWrapper: Component mounted');
+    
+    // Listen for Clerk events
+    const handleClerkReady = () => {
+      console.log('Clerk: Ready event fired');
+    };
+    
+    const handleUserChanged = (user) => {
+      console.log('Clerk: User changed', user ? 'User exists' : 'No user', user?.id);
+    };
+    
+    window.addEventListener('clerk:ready', handleClerkReady);
+    window.addEventListener('clerk:user', handleUserChanged);
+    
+    return () => {
+      window.removeEventListener('clerk:ready', handleClerkReady);
+      window.removeEventListener('clerk:user', handleUserChanged);
+    };
+  }, []);
+  
+  return children;
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
-      <App />
+    <ClerkProvider 
+      publishableKey={PUBLISHABLE_KEY}
+      afterSignInUrl="/"
+      afterSignUpUrl="/"
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+    >
+      <DebugWrapper>
+        <App />
+      </DebugWrapper>
     </ClerkProvider>
   </React.StrictMode>
 );

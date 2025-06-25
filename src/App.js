@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { SignedIn, SignedOut, SignInButton, UserButton, SignIn, SignUp } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, SignInButton, UserButton, SignIn, SignUp, useUser, useAuth } from '@clerk/clerk-react';
 import './App.css';
 import { zeroShotTechnique } from './techniques/zeroShot';
 import { fewShotTechnique } from './techniques/fewShot';
@@ -337,6 +337,20 @@ const techniques = {
 };
 
 function MainApp() {
+  const { user, isSignedIn, isLoaded } = useUser();
+  const { signOut } = useAuth();
+  
+  // Add debugging for authentication state
+  useEffect(() => {
+    console.log('MainApp Auth Debug:', {
+      isLoaded,
+      isSignedIn,
+      userId: user?.id,
+      userEmail: user?.primaryEmailAddress?.emailAddress,
+      timestamp: new Date().toISOString()
+    });
+  }, [isLoaded, isSignedIn, user]);
+
   const [rawPrompt, setRawPrompt] = useState('');
   const [selectedTechniques, setSelectedTechniques] = useState(['zero-shot']);
   const [optimizedPrompt, setOptimizedPrompt] = useState('');
