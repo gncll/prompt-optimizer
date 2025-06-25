@@ -930,7 +930,7 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
              <SignIn 
                routing="path" 
                path="/sign-in" 
-               redirectUrl="/"
+               fallbackRedirectUrl="/"
                appearance={{
                  elements: {
                    rootBox: "mx-auto",
@@ -946,7 +946,7 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
              <SignUp 
                routing="path" 
                path="/sign-up" 
-               redirectUrl="/"
+               fallbackRedirectUrl="/"
                appearance={{
                  elements: {
                    rootBox: "mx-auto",
