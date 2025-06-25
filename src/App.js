@@ -10,30 +10,6 @@ import { ragTechnique } from './techniques/rag';
 import { AIService, AI_PROVIDERS, AVAILABLE_MODELS } from './services/aiService';
 import { FreeTrialService } from './services/freeTrialService';
 
-// Check if Clerk is available
-const CLERK_AVAILABLE = !!(process.env.REACT_APP_CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
-
-// Safe Clerk components that work even when Clerk is not available
-const SafeSignedIn = ({ children }) => {
-  if (!CLERK_AVAILABLE) return null;
-  return <SignedIn>{children}</SignedIn>;
-};
-
-const SafeSignedOut = ({ children }) => {
-  if (!CLERK_AVAILABLE) return children;
-  return <SignedOut>{children}</SignedOut>;
-};
-
-const SafeSignInButton = ({ children }) => {
-  if (!CLERK_AVAILABLE) return null;
-  return <SignInButton>{children}</SignInButton>;
-};
-
-const SafeUserButton = (props) => {
-  if (!CLERK_AVAILABLE) return null;
-  return <UserButton {...props} />;
-};
-
 // FAQ Item Component
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -154,11 +130,11 @@ const HeroSection = () => {
             </div>
           </div>
           
-          <SafeSignInButton>
+          <SignInButton>
             <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-12 py-4 rounded-2xl text-xl font-semibold transition-all transform hover:scale-105 shadow-2xl">
               🚀 Get Started Today
             </button>
-          </SafeSignInButton>
+          </SignInButton>
         </div>
       </div>
     );
@@ -549,39 +525,39 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
 
             {/* Navigation */}
             <div className="flex items-center space-x-4">
-              <SafeSignedIn>
-                <SafeUserButton 
-                  appearance={{
-                    elements: {
-                      avatarBox: "w-8 h-8",
-                    }
-                  }}
-                />
-              </SafeSignedIn>
-              
-              <SafeSignedOut>
-                <div className="text-sm text-gray-600 bg-white/50 px-3 py-1 rounded-full">
-                  {FreeTrialService.getRemainingTrials()} free trials left
-                </div>
-                <SafeSignInButton mode="modal">
-                  <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105">
-                    Sign In
-                  </button>
-                </SafeSignInButton>
-              </SafeSignedOut>
+                          <SignedIn>
+              <UserButton 
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8",
+                  }
+                }}
+              />
+            </SignedIn>
+            
+            <SignedOut>
+              <div className="text-sm text-gray-600 bg-white/50 px-3 py-1 rounded-full">
+                {FreeTrialService.getRemainingTrials()} free trials left
+              </div>
+              <SignInButton mode="modal">
+                <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105">
+                  Sign In
+                </button>
+              </SignInButton>
+            </SignedOut>
             </div>
           </div>
         </div>
       </header>
 
       <main>
-        <SafeSignedOut>
+        <SignedOut>
           <HeroSection />
-        </SafeSignedOut>
+        </SignedOut>
         
                  
         
-        <SafeSignedIn>
+        <SignedIn>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">AI-Powered Prompt Perfection</h2>
@@ -915,7 +891,7 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
             </div>
           </div>
         </div>
-         </SafeSignedIn>
+         </SignedIn>
       </main>
     </div>
   );

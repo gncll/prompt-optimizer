@@ -8,28 +8,16 @@ import { ClerkProvider } from '@clerk/clerk-react';
 // Import your Clerk Publishable Key
 const PUBLISHABLE_KEY = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-// Don't throw error if Clerk key is missing, just log it
 if (!PUBLISHABLE_KEY) {
-  console.warn('Missing Clerk Publishable Key - authentication features will be disabled');
+  throw new Error('Missing Publishable Key')
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    {PUBLISHABLE_KEY ? (
-      <ClerkProvider 
-        publishableKey={PUBLISHABLE_KEY} 
-        navigate={(to) => window.history.pushState(null, '', to)}
-      >
-        <App />
-      </ClerkProvider>
-    ) : (
-      <div style={{padding: '20px', textAlign: 'center'}}>
-        <h1>Missing Clerk Configuration</h1>
-        <p>Please configure REACT_APP_CLERK_PUBLISHABLE_KEY environment variable.</p>
-        <App />
-      </div>
-    )}
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+      <App />
+    </ClerkProvider>
   </React.StrictMode>
 );
 
