@@ -16,13 +16,21 @@ if (!PUBLISHABLE_KEY) {
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ClerkProvider 
-      publishableKey={PUBLISHABLE_KEY || ''} 
-      afterSignOutUrl='/'
-      navigate={(to) => window.history.pushState(null, '', to)}
-    >
-      <App />
-    </ClerkProvider>
+    {PUBLISHABLE_KEY ? (
+      <ClerkProvider 
+        publishableKey={PUBLISHABLE_KEY} 
+        afterSignOutUrl='/'
+        navigate={(to) => window.history.pushState(null, '', to)}
+      >
+        <App />
+      </ClerkProvider>
+    ) : (
+      <div style={{padding: '20px', textAlign: 'center'}}>
+        <h1>Missing Clerk Configuration</h1>
+        <p>Please configure NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable.</p>
+        <App />
+      </div>
+    )}
   </React.StrictMode>
 );
 
