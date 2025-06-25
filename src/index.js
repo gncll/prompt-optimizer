@@ -19,7 +19,6 @@ root.render(
     {PUBLISHABLE_KEY ? (
       <ClerkProvider 
         publishableKey={PUBLISHABLE_KEY} 
-        afterSignOutUrl='/'
         navigate={(to) => window.history.pushState(null, '', to)}
       >
         <App />
@@ -27,7 +26,7 @@ root.render(
     ) : (
       <div style={{padding: '20px', textAlign: 'center'}}>
         <h1>Missing Clerk Configuration</h1>
-        <p>Please configure NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable.</p>
+        <p>Please configure REACT_APP_CLERK_PUBLISHABLE_KEY environment variable.</p>
         <App />
       </div>
     )}

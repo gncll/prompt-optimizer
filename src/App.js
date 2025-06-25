@@ -551,7 +551,6 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
             <div className="flex items-center space-x-4">
               <SafeSignedIn>
                 <SafeUserButton 
-                  afterSignOutUrl="/" 
                   appearance={{
                     elements: {
                       avatarBox: "w-8 h-8",
