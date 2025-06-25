@@ -340,6 +340,26 @@ function MainApp() {
   const { user, isSignedIn, isLoaded } = useUser();
   const { signOut } = useAuth();
   
+  // Move all useState hooks to the top - before any conditional returns
+  const [rawPrompt, setRawPrompt] = useState('');
+  const [selectedTechniques, setSelectedTechniques] = useState(['zero-shot']);
+  const [optimizedPrompt, setOptimizedPrompt] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [useAI, setUseAI] = useState(true);
+  const [selectedProvider, setSelectedProvider] = useState(AI_PROVIDERS.OPENAI);
+  const [selectedModel, setSelectedModel] = useState('o1-mini');
+  
+  // Test Prompt states
+  const [testInput, setTestInput] = useState('');
+  const [testOutput, setTestOutput] = useState('');
+  const [isTestLoading, setIsTestLoading] = useState(false);
+  
+  // Feedback states
+  const [positiveExamples, setPositiveExamples] = useState('');
+  const [negativeExamples, setNegativeExamples] = useState('');
+  const [showPositiveFeedback, setShowPositiveFeedback] = useState(false);
+  const [showNegativeFeedback, setShowNegativeFeedback] = useState(false);
+  
   // Add debugging for authentication state
   useEffect(() => {
     console.log('MainApp Auth Debug:', {
@@ -371,25 +391,6 @@ function MainApp() {
       </div>
     );
   }
-
-  const [rawPrompt, setRawPrompt] = useState('');
-  const [selectedTechniques, setSelectedTechniques] = useState(['zero-shot']);
-  const [optimizedPrompt, setOptimizedPrompt] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [useAI, setUseAI] = useState(true);
-  const [selectedProvider, setSelectedProvider] = useState(AI_PROVIDERS.OPENAI);
-  const [selectedModel, setSelectedModel] = useState('o1-mini');
-  
-  // Test Prompt states
-  const [testInput, setTestInput] = useState('');
-  const [testOutput, setTestOutput] = useState('');
-  const [isTestLoading, setIsTestLoading] = useState(false);
-  
-  // Feedback states
-  const [positiveExamples, setPositiveExamples] = useState('');
-  const [negativeExamples, setNegativeExamples] = useState('');
-  const [showPositiveFeedback, setShowPositiveFeedback] = useState(false);
-  const [showNegativeFeedback, setShowNegativeFeedback] = useState(false);
 
   const availableProviders = AIService.getAvailableProviders();
   const availableModels = AVAILABLE_MODELS[selectedProvider] || [];
@@ -975,7 +976,7 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
          <Route path="*" element={<Navigate to="/" replace />} />
        </Routes>
      </Router>
-   );
- }
+  );
+}
 
 export default App;
