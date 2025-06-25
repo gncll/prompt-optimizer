@@ -470,11 +470,27 @@ function App() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center space-x-3">
-              <img 
-                src="/logo.png" 
-                alt="Prompt Optimizer Logo" 
-                className="h-12 w-12 rounded-lg object-contain bg-white shadow-sm border"
-              />
+              <div className="relative">
+                <img 
+                  src="/logo.png" 
+                  alt="Prompt Optimizer Logo" 
+                  className="h-12 w-12 rounded-lg object-contain bg-white shadow-sm border"
+                  onError={(e) => {
+                    console.log('Logo failed to load, hiding image');
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                  onLoad={() => {
+                    console.log('Logo loaded successfully');
+                  }}
+                />
+                <div 
+                  className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 shadow-sm border flex items-center justify-center text-white font-bold text-lg hidden"
+                  style={{ display: 'none' }}
+                >
+                  P
+                </div>
+              </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Prompt Optimizer</h1>
                 <p className="text-xs text-gray-600 hidden sm:block">Transform your prompts with AI</p>
