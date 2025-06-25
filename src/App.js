@@ -11,7 +11,7 @@ import { AIService, AI_PROVIDERS, AVAILABLE_MODELS } from './services/aiService'
 import { FreeTrialService } from './services/freeTrialService';
 
 // Check if Clerk is available
-const CLERK_AVAILABLE = !!process.env.REACT_APP_CLERK_PUBLISHABLE_KEY;
+const CLERK_AVAILABLE = !!(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.REACT_APP_CLERK_PUBLISHABLE_KEY);
 
 // Safe Clerk components that work even when Clerk is not available
 const SafeSignedIn = ({ children }) => {
