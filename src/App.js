@@ -427,8 +427,8 @@ function MainApp() {
     setIsLoading(true);
 
     try {
-      let optimized = rawPrompt;
-      
+    let optimized = rawPrompt;
+    
       if (useAI) {
         // Use AI optimization with feedback
         const technique = techniques[selectedTechniques[0]]; // Use first selected technique for AI
@@ -446,7 +446,7 @@ function MainApp() {
         });
       }
 
-      setOptimizedPrompt(optimized);
+    setOptimizedPrompt(optimized);
     } catch (error) {
       setOptimizedPrompt(`Error: ${error.message}`);
     } finally {
@@ -689,16 +689,16 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
 
              {/* Main Interface */}
              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-               {/* Left Panel - Input */}
+          {/* Left Panel - Input */}
                <div className="space-y-6">
-                 <div className="bg-white rounded-lg shadow-sm border p-6">
-                   <h2 className="text-lg font-semibold text-gray-800 mb-4">Raw Prompt</h2>
-                   <textarea
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Raw Prompt</h2>
+              <textarea
                      className="w-full h-64 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                     placeholder="Enter your raw prompt here..."
-                     value={rawPrompt}
-                     onChange={(e) => setRawPrompt(e.target.value)}
-                   />
+                placeholder="Enter your raw prompt here..."
+                value={rawPrompt}
+                onChange={(e) => setRawPrompt(e.target.value)}
+              />
                    
                    {/* Feedback Examples */}
                    <div className="mt-4 space-y-3">
@@ -758,28 +758,28 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                        )}
                      </div>
                    </div>
-                 </div>
+            </div>
 
                  {/* Optimization Techniques */}
-                 <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white rounded-lg shadow-sm border p-6">
                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Perfection Techniques</h3>
-                   <div className="space-y-3">
+              <div className="space-y-3">
                      {Object.entries(techniques).map(([key, technique]) => (
-                       <label key={key} className="flex items-start space-x-3 cursor-pointer">
-                         <input
-                           type="checkbox"
-                           className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                           checked={selectedTechniques.includes(key)}
-                           onChange={() => handleTechniqueToggle(key)}
+                  <label key={key} className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={selectedTechniques.includes(key)}
+                      onChange={() => handleTechniqueToggle(key)}
                            disabled={useAI && selectedTechniques.length === 1 && selectedTechniques.includes(key)}
-                         />
-                         <div className="flex-1">
+                    />
+                    <div className="flex-1">
                            <div className="font-medium text-gray-900 text-sm">{technique.name}</div>
                            <div className="text-xs text-gray-600">{technique.description}</div>
-                         </div>
-                       </label>
-                     ))}
-                   </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
                    
                    {useAI && selectedTechniques.length > 1 && (
                      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -788,33 +788,33 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                        </p>
                      </div>
                    )}
-                   
-                   <button
-                     onClick={generateOptimizedPrompt}
+              
+              <button
+                onClick={generateOptimizedPrompt}
                      disabled={isLoading}
                      className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                   >
+              >
                      {isLoading ? 'Perfecting...' : '✨ Perfect Prompt'}
-                   </button>
-                 </div>
-               </div>
+              </button>
+            </div>
+          </div>
 
-               {/* Right Panel - Output */}
+          {/* Right Panel - Output */}
                <div className="space-y-6">
                  {/* Perfected Prompt Section */}
                  <div className="bg-white rounded-lg shadow-sm border p-6">
-                   <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-4">
                      <h2 className="text-lg font-semibold text-gray-800">Perfected Prompt</h2>
                      {optimizedPrompt && !isLoading && (
-                       <button
-                         onClick={copyToClipboard}
-                         className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors"
-                       >
+                  <button
+                    onClick={copyToClipboard}
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors"
+                  >
                          📋 Copy
-                       </button>
-                     )}
-                   </div>
-                   
+                  </button>
+                )}
+              </div>
+              
                    <div className="min-h-[250px]">
                      {isLoading ? (
                        <div className="flex items-center justify-center h-full">
@@ -826,12 +826,12 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                          </div>
                        </div>
                      ) : optimizedPrompt ? (
-                       <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 p-4 rounded-lg h-full overflow-auto">
-                         {optimizedPrompt}
-                       </pre>
-                     ) : (
-                       <div className="flex items-center justify-center h-full text-gray-500">
-                         <div className="text-center">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 p-4 rounded-lg h-full overflow-auto">
+                    {optimizedPrompt}
+                  </pre>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="text-center">
                            <div className="text-3xl mb-2">✨</div>
                            <div className="text-base">Your perfected prompt will appear here</div>
                          </div>
@@ -904,21 +904,21 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                              <div className="text-center">
                                <div className="text-xl mb-1">🧪</div>
                                <div className="text-sm">Test output will appear here</div>
-                             </div>
-                           </div>
-                         )}
-                       </div>
+                    </div>
+                  </div>
+                )}
+              </div>
                      </div>
                    </div>
                  )}
-               </div>
-             </div>
-           </div>
+            </div>
+          </div>
+        </div>
          </SafeSignedIn>
-       </main>
-     </div>
-   );
- }
+      </main>
+    </div>
+  );
+}
 
  // Main App component with routing
  function App() {
@@ -966,4 +966,4 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
    );
  }
 
- export default App;
+export default App;
