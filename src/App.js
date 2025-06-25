@@ -267,11 +267,11 @@ const HeroSection = () => {
             </div>
           </div>
           
-          <SafeSignInButton>
+          <SignInButton>
             <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-12 py-4 rounded-2xl text-xl font-semibold transition-all transform hover:scale-105 shadow-2xl">
               🚀 Sign In for Full Access
             </button>
-          </SafeSignInButton>
+          </SignInButton>
         </div>
 
         {/* FAQ Section */}
@@ -316,11 +316,11 @@ const HeroSection = () => {
             >
               🐦 Follow Us
             </a>
-            <SafeSignInButton>
+            <SignInButton>
               <button className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-4 rounded-xl font-semibold transition-colors">
                 💬 Join Community
               </button>
-            </SafeSignInButton>
+            </SignInButton>
           </div>
         </div>
       </div>
