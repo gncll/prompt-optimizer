@@ -952,9 +952,6 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
          <Route path="/sign-in" element={
            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
              <SignIn 
-               routing="path" 
-               path="/sign-in" 
-               fallbackRedirectUrl="/"
                appearance={{
                  elements: {
                    rootBox: "mx-auto",
@@ -968,9 +965,6 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
          <Route path="/sign-up" element={
            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
              <SignUp 
-               routing="path" 
-               path="/sign-up" 
-               fallbackRedirectUrl="/"
                appearance={{
                  elements: {
                    rootBox: "mx-auto",
