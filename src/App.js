@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { SignedIn, SignedOut, SignInButton, UserButton, SignIn, SignUp, useUser } from '@clerk/clerk-react';
+import ReactMarkdown from 'react-markdown';
 import './App.css';
 import { zeroShotTechnique } from './techniques/zeroShot';
 import { fewShotTechnique } from './techniques/fewShot';
@@ -180,7 +181,7 @@ const HeroSection = () => {
             <h3 className="text-2xl font-bold text-gray-800 mb-6">Your Original Prompt</h3>
             <textarea
               className="w-full h-48 p-4 border-2 border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-base"
-              placeholder="Enter your prompt here... (e.g., 'Write a blog post about AI')"
+              placeholder="To perfect your prompt, write your prompt here and press 'Perfect'"
               value={trialPrompt}
               onChange={(e) => setTrialPrompt(e.target.value)}
             />
@@ -876,7 +877,7 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                        <div className="relative border-r border-gray-300 h-full">
                          <textarea
                            className="w-full h-full p-4 resize-none focus:ring-0 focus:border-transparent outline-none text-sm bg-white"
-                           placeholder="To rewrite text, enter or paste it here and press 'Perfect'."
+                           placeholder="To perfect your prompt, write your prompt here and press 'Perfect'"
                            value={rawPrompt}
                            onChange={(e) => setRawPrompt(e.target.value)}
                          />
@@ -905,9 +906,11 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                                </div>
                              </div>
                            ) : optimizedPrompt ? (
-                             <pre className="whitespace-pre-wrap text-sm text-gray-800 p-4 h-full overflow-auto">
-                               {optimizedPrompt}
-                             </pre>
+                             <div className="bg-white p-4 h-full overflow-auto">
+                               <div className="prose prose-sm prose-gray max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-strong:text-gray-900 prose-ul:text-gray-800 prose-ol:text-gray-800">
+                                 <ReactMarkdown>{optimizedPrompt}</ReactMarkdown>
+                               </div>
+                             </div>
                            ) : (
                              <div className="flex items-center justify-center h-full text-gray-500">
                                <div className="text-center">
@@ -1109,8 +1112,10 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                               </div>
                             </div>
                          ) : testOutput ? (
-                           <div className="text-sm text-gray-800 bg-gray-50 p-4 rounded-lg h-full overflow-auto">
-                             {testOutput}
+                           <div className="bg-gray-50 p-4 rounded-lg h-full overflow-auto">
+                             <div className="prose prose-sm prose-gray max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-strong:text-gray-900 prose-ul:text-gray-800 prose-ol:text-gray-800">
+                               <ReactMarkdown>{testOutput}</ReactMarkdown>
+                             </div>
                            </div>
                          ) : (
                            <div className="flex items-center justify-center h-[150px] text-gray-500">

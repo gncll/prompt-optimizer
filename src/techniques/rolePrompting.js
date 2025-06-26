@@ -13,13 +13,15 @@ Please respond with the expertise and perspective of a qualified professional, p
   },
 
   async optimizeWithAI(userPrompt, provider, model, feedback = {}) {
-    let systemPrompt = `You are an expert prompt engineer. Your task is to optimize prompts using the Role Prompting technique.
+    let systemPrompt = `You are an expert prompt engineer. Your task is to optimize prompts using the Role prompting technique.
 
-Role prompting means assigning a specific expert role or persona to the AI. The key is to:
-1. Identify the most relevant expert role for the task
-2. Be specific about the expertise level and background
-3. Include relevant context about the role's perspective
-4. Use phrases like "You are an expert..." or "As a professional..."`;
+Role prompting means assigning a specific role or persona to the AI. The key is to:
+1. Define a clear, relevant role or persona
+2. Specify expertise and background
+3. Set appropriate context and perspective
+4. Use "You are..." statements
+
+IMPORTANT: Return only the optimized prompt directly. Do NOT include any prefixes like "Optimized Prompt:" or similar labels.`;
 
     // Add feedback if provided
     if (feedback.positiveExamples && feedback.positiveExamples.trim()) {

@@ -17,11 +17,13 @@ Please provide a comprehensive response that incorporates the provided context a
   async optimizeWithAI(userPrompt, provider, model, feedback = {}) {
     let systemPrompt = `You are an expert prompt engineer. Your task is to optimize prompts using the RAG (Retrieval-Augmented Generation) technique.
 
-RAG prompting means providing relevant context or information to enhance the response. The key is to:
-1. Include relevant background information or context
-2. Reference specific data, documents, or sources when applicable
-3. Ask the model to base its response on the provided information
-4. Structure the prompt to clearly separate context from the task`;
+RAG prompting involves incorporating relevant context or knowledge. The key is to:
+1. Include relevant background information
+2. Provide necessary context upfront
+3. Reference specific knowledge sources
+4. Structure information clearly
+
+IMPORTANT: Return only the optimized prompt directly. Do NOT include any prefixes like "Optimized Prompt:" or similar labels.`;
 
     // Add feedback if provided
     if (feedback.positiveExamples && feedback.positiveExamples.trim()) {

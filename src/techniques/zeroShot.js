@@ -17,7 +17,9 @@ Zero-shot prompting means giving direct, clear instructions without providing ex
 1. Be specific and clear about what you want
 2. Include context when necessary
 3. Specify the desired output format
-4. Use imperative language`;
+4. Use imperative language
+
+IMPORTANT: Return only the optimized prompt directly. Do NOT include any prefixes like "Optimized Prompt:" or similar labels.`;
 
     // Add feedback if provided
     if (feedback.positiveExamples && feedback.positiveExamples.trim()) {

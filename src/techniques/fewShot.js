@@ -23,11 +23,13 @@ Now, please provide your response:`;
   async optimizeWithAI(userPrompt, provider, model, feedback = {}) {
     let systemPrompt = `You are an expert prompt engineer. Your task is to optimize prompts using the Few-shot technique.
 
-Few-shot prompting means providing a few examples to demonstrate the desired behavior. The key is to:
-1. Provide 2-3 relevant examples
-2. Show clear input-output patterns
-3. Use diverse but representative examples
-4. Maintain consistent formatting`;
+Few-shot prompting means providing a few examples to demonstrate the desired pattern or format. The key is to:
+1. Include 2-3 relevant examples
+2. Show the input-output pattern clearly
+3. Make examples diverse but consistent
+4. End with the actual task
+
+IMPORTANT: Return only the optimized prompt directly. Do NOT include any prefixes like "Optimized Prompt:" or similar labels.`;
 
     // Add feedback if provided
     if (feedback.positiveExamples && feedback.positiveExamples.trim()) {

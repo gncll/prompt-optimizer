@@ -18,13 +18,15 @@ Let's work through this step by step:`;
   },
 
   async optimizeWithAI(userPrompt, provider, model, feedback = {}) {
-    let systemPrompt = `You are an expert prompt engineer. Your task is to optimize prompts using the Chain-of-Thought technique.
+    let systemPrompt = `You are an expert prompt engineer. Your task is to optimize prompts using the Chain-of-thought technique.
 
 Chain-of-thought prompting encourages step-by-step reasoning. The key is to:
-1. Ask the model to think step by step
-2. Break down complex problems into smaller parts
-3. Use phrases like "Let's think step by step" or "First, let's analyze..."
-4. Encourage showing the reasoning process`;
+1. Ask for step-by-step thinking
+2. Request explicit reasoning process
+3. Break down complex problems
+4. Show intermediate steps
+
+IMPORTANT: Return only the optimized prompt directly. Do NOT include any prefixes like "Optimized Prompt:" or similar labels.`;
 
     // Add feedback if provided
     if (feedback.positiveExamples && feedback.positiveExamples.trim()) {
