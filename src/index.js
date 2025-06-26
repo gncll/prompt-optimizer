@@ -67,19 +67,10 @@ root.render(
   <React.StrictMode>
     <ClerkProvider 
       publishableKey={PUBLISHABLE_KEY}
-      fallbackRedirectUrl="/"
-      signInFallbackRedirectUrl="/"
-      signUpFallbackRedirectUrl="/"
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      domain="prompt-perfector.com"
-      isSatellite={false}
-      debug={true}
-      telemetry={false}
-      navigate={(to) => {
-        console.log('Clerk navigate called:', to);
-        window.location.href = to;
-      }}
+      afterSignInUrl="/"
+      afterSignUpUrl="/"
     >
       <DebugWrapper>
         <App />
