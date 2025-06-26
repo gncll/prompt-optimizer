@@ -74,10 +74,11 @@ root.render(
       signUpUrl="/sign-up"
       domain="prompt-perfector.com"
       isSatellite={false}
+      debug={true}
+      telemetry={false}
       navigate={(to) => {
         console.log('Clerk navigate called:', to);
-        window.history.pushState({}, '', to);
-        window.dispatchEvent(new PopStateEvent('popstate'));
+        window.location.href = to;
       }}
     >
       <DebugWrapper>
