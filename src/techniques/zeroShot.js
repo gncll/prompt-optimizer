@@ -36,6 +36,33 @@ The optimized prompt should discourage outputs that are:
 ${feedback.negativeExamples}`;
     }
 
+    // Add language instruction if not English
+    if (feedback.language && feedback.language !== 'English') {
+      systemPrompt += `
+
+LANGUAGE REQUIREMENT:
+The optimized prompt should include instructions to respond in ${feedback.language}.`;
+    }
+
+    // Add tone instruction if not Normal
+    if (feedback.tone && feedback.tone !== 'Normal') {
+      const toneDescriptions = {
+        'Concise': 'brief and to the point',
+        'Explanatory': 'detailed and informative',
+        'Conversational': 'natural and casual',
+        'Friendly': 'warm and approachable',
+        'Confident': 'assertive and authoritative',
+        'Minimalist': 'simple and clean',
+        'Witty': 'clever and humorous'
+      };
+      
+      const toneDesc = toneDescriptions[feedback.tone] || feedback.tone.toLowerCase();
+      systemPrompt += `
+
+TONE REQUIREMENT:
+The optimized prompt should include instructions for a ${feedback.tone.toLowerCase()} tone with ${toneDesc}.`;
+    }
+
     systemPrompt += `
 
 Optimize the following prompt using zero-shot technique:`;

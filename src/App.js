@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { SignedIn, SignedOut, SignInButton, UserButton, SignIn, SignUp, useUser, useAuth } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, SignInButton, UserButton, SignIn, SignUp, useUser } from '@clerk/clerk-react';
 import './App.css';
 import { zeroShotTechnique } from './techniques/zeroShot';
 import { fewShotTechnique } from './techniques/fewShot';
@@ -338,7 +338,6 @@ const techniques = {
 
 function MainApp() {
   const { user, isSignedIn, isLoaded } = useUser();
-  const { signOut } = useAuth();
   
   // Move all useState hooks to the top - before any conditional returns
   const [rawPrompt, setRawPrompt] = useState('');
@@ -359,6 +358,15 @@ function MainApp() {
   const [negativeExamples, setNegativeExamples] = useState('');
   const [showPositiveFeedback, setShowPositiveFeedback] = useState(false);
   const [showNegativeFeedback, setShowNegativeFeedback] = useState(false);
+  
+  // Language and Tone states
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const [selectedTone, setSelectedTone] = useState('Normal');
+  const [customTone, setCustomTone] = useState('');
+  
+  // Right sidebar states
+  const [showRightSidebar, setShowRightSidebar] = useState(false);
+  const [rightSidebarContent, setRightSidebarContent] = useState('');
   
   // Add debugging for authentication state
   useEffect(() => {
@@ -405,6 +413,26 @@ function MainApp() {
 
   const availableProviders = AIService.getAvailableProviders();
   const availableModels = AVAILABLE_MODELS[selectedProvider] || [];
+  
+  // Language and Tone options
+  const languages = [
+    { code: 'English', name: 'English (US)', flag: '🇺🇸' },
+    { code: 'French', name: 'French', flag: '🇫🇷' },
+    { code: 'Spanish', name: 'Spanish', flag: '🇪🇸' },
+    { code: 'German', name: 'German', flag: '🇩🇪' }
+  ];
+  
+  const tones = [
+    { id: 'Concise', name: 'Concise', description: 'Brief and to the point' },
+    { id: 'Normal', name: 'Normal', description: 'Balanced and neutral tone' },
+    { id: 'Explanatory', name: 'Explanatory', description: 'Detailed and informative' },
+    { id: 'Conversational', name: 'Conversational', description: 'Natural and casual' },
+    { id: 'Friendly', name: 'Friendly', description: 'Warm and approachable' },
+    { id: 'Confident', name: 'Confident', description: 'Assertive and authoritative' },
+    { id: 'Minimalist', name: 'Minimalist', description: 'Simple and clean' },
+    { id: 'Witty', name: 'Witty', description: 'Clever and humorous' },
+    { id: 'Custom', name: 'Custom', description: 'Define your own tone' }
+  ];
 
   const handleTechniqueToggle = (technique) => {
     setSelectedTechniques(prev => {
@@ -453,20 +481,31 @@ function MainApp() {
     let optimized = rawPrompt;
     
       if (useAI) {
-        // Use AI optimization with feedback
+        // Use AI optimization with feedback, language, and tone
         const technique = techniques[selectedTechniques[0]]; // Use first selected technique for AI
         optimized = await technique.optimizeWithAI(rawPrompt, selectedProvider, selectedModel, {
           positiveExamples,
-          negativeExamples
+          negativeExamples,
+          language: selectedLanguage,
+          tone: selectedTone === 'Custom' ? customTone : selectedTone
         });
       } else {
-        // Use template-based optimization
+        // Use template-based optimization with language and tone
         selectedTechniques.forEach(techniqueKey => {
           const technique = techniques[techniqueKey];
           if (technique) {
             optimized = technique.generatePrompt(optimized);
           }
         });
+        
+        // Add language and tone instructions to template-based optimization
+        const languageInstruction = selectedLanguage !== 'English' ? `\n\nIMPORTANT: Respond in ${selectedLanguage}.` : '';
+        const finalTone = selectedTone === 'Custom' ? customTone : selectedTone;
+        const toneInstruction = finalTone !== 'Normal' ? `\n\nTONE: Use a ${finalTone.toLowerCase()} tone${selectedTone !== 'Custom' ? ` - ${tones.find(t => t.id === selectedTone)?.description}` : ''}.` : '';
+        
+        if (languageInstruction || toneInstruction) {
+          optimized += languageInstruction + toneInstruction;
+        }
       }
 
     setOptimizedPrompt(optimized);
@@ -604,149 +643,135 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
         
                  
         
-        <SignedIn>
+                <SignedIn>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">AI-Powered Prompt Perfection</h2>
-              <p className="text-gray-600 mb-6">Welcome back! You have unlimited access to all perfection features.</p>
-              
-              {/* AI Configuration */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 mb-6">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="useAI"
-                      checked={useAI}
-                      onChange={(e) => setUseAI(e.target.checked)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="useAI" className="text-sm font-medium text-gray-700">
-                      Use AI Perfection
-                    </label>
-                  </div>
-                  {availableProviders.length > 0 && (
-                    <div className="flex items-center space-x-1">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-xs text-green-600">
-                        {availableProviders.map(getProviderDisplayName).join(', ')} Connected
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-                             {/* Provider Selection */}
-               {useAI && availableProviders.length > 0 && (
-                 <div className="mb-6">
-                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                     Choose Your AI Provider
-                   </label>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                     {availableProviders.map((provider) => (
-                       <button
-                         key={provider}
-                         onClick={() => handleProviderChange(provider)}
-                         className={`group relative p-4 rounded-xl border-2 text-sm font-medium transition-all duration-200 ${
-                           selectedProvider === provider
-                             ? 'border-blue-300 bg-white shadow-lg transform scale-105'
-                             : 'border-gray-200 bg-white/50 hover:border-blue-200 hover:bg-white hover:shadow-md'
-                         }`}
-                       >
-                         <div className="flex items-center space-x-3">
-                           {provider === AI_PROVIDERS.OPENAI ? (
-                             <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                               <span className="text-white font-bold text-xs">AI</span>
-                             </div>
-                           ) : (
-                             <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                               <span className="text-white font-bold text-xs">C</span>
-                             </div>
-                           )}
-                           <div className="text-left">
-                             <div className={`font-semibold ${selectedProvider === provider ? 'text-blue-700' : 'text-gray-700'}`}>
-                               {getProviderDisplayName(provider)}
-                             </div>
-                             <div className="text-xs text-gray-500">
-                               {provider === AI_PROVIDERS.OPENAI ? 'GPT Models' : 'Claude Models'}
-                             </div>
+
+                          {/* Main Layout with Left Sidebar and Right Options */}
+             <div className="flex gap-4 mb-6 relative" style={{height: 'calc(100vh - 200px)'}}>
+               {/* Left Sidebar - Perfection Techniques & Model Selection */}
+               <div className="w-56 bg-white rounded-lg shadow-sm border p-3 h-full overflow-y-auto">
+                 <h3 className="text-xs font-semibold text-gray-800 mb-2">Perfection Techniques</h3>
+                 <div className="space-y-1 mb-4">
+                   {Object.entries(techniques).map(([key, technique]) => (
+                     <label key={key} className="flex items-center space-x-2 cursor-pointer p-1 rounded hover:bg-gray-50 transition-colors">
+                       <input
+                         type="checkbox"
+                         className="h-2.5 w-2.5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                         checked={selectedTechniques.includes(key)}
+                         onChange={() => handleTechniqueToggle(key)}
+                         disabled={useAI && selectedTechniques.length === 1 && selectedTechniques.includes(key)}
+                       />
+                       <div className="flex-1 flex items-center justify-between">
+                         <span className="text-xs font-medium text-gray-900">{technique.name}</span>
+                         <div className="relative group">
+                           <button className="text-gray-400 hover:text-gray-600 text-xs w-3 h-3 rounded-full border border-gray-300 flex items-center justify-center">
+                             ?
+                           </button>
+                           <div className="absolute left-0 top-5 w-64 bg-black text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                             {technique.description}
                            </div>
                          </div>
-                         {selectedProvider === provider && (
-                           <div className="absolute top-2 right-2">
-                             <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                           </div>
-                         )}
-                       </button>
-                     ))}
-                   </div>
+                       </div>
+                     </label>
+                   ))}
                  </div>
-               )}
-
-               {/* Model Selection */}
-               {useAI && availableModels.length > 0 && (
-                 <div className="mb-6">
-                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                     Select Model
-                   </label>
-                   <div className="relative">
-                     <select
-                       value={selectedModel}
-                       onChange={(e) => setSelectedModel(e.target.value)}
-                       className="w-full p-4 pr-10 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white shadow-sm appearance-none"
-                     >
-                       {availableModels.map((model) => (
-                         <option key={model.id} value={model.id}>
-                           {model.name} - {model.description}
-                         </option>
-                       ))}
-                     </select>
-                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                       <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                       </svg>
+                 
+                 {/* AI Configuration */}
+                 <div className="border-t pt-3">
+                   <h3 className="text-xs font-semibold text-gray-800 mb-2">AI Configuration</h3>
+                   
+                   {/* Use AI Toggle */}
+                   <div className="mb-3">
+                     <label className="flex items-center space-x-2 cursor-pointer">
+                       <input
+                         type="checkbox"
+                         checked={useAI}
+                         onChange={(e) => setUseAI(e.target.checked)}
+                         className="h-2.5 w-2.5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                       />
+                       <span className="text-xs font-medium text-gray-900">Use AI Perfection</span>
+                     </label>
+                     {availableProviders.length > 0 && (
+                       <div className="flex items-center space-x-1 mt-1">
+                         <div className="w-1 h-1 bg-green-500 rounded-full"></div>
+                         <span className="text-xs text-green-600">
+                           {availableProviders.map(getProviderDisplayName).join(', ')} Connected
+                         </span>
+                       </div>
+                     )}
+                   </div>
+                   <div className="space-y-2">
+                     {/* Provider Selection */}
+                     <div>
+                       <label className="block text-xs font-medium text-gray-700 mb-1">Provider</label>
+                       <div className="space-y-0.5">
+                         {availableProviders.map((provider) => (
+                           <label key={provider} className="flex items-center space-x-2 cursor-pointer p-0.5">
+                             <input
+                               type="radio"
+                               name="provider"
+                               value={provider}
+                               checked={selectedProvider === provider}
+                               onChange={(e) => handleProviderChange(e.target.value)}
+                               className="h-2.5 w-2.5 text-blue-600 focus:ring-blue-500"
+                             />
+                             <span className="text-xs text-gray-900">{getProviderDisplayName(provider)}</span>
+                           </label>
+                         ))}
+                       </div>
+                     </div>
+                     
+                     {/* Model Selection Dropdown */}
+                     <div>
+                       <label className="block text-xs font-medium text-gray-700 mb-1">Model</label>
+                       <select
+                         value={selectedModel}
+                         onChange={(e) => setSelectedModel(e.target.value)}
+                         className="w-full p-1.5 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                       >
+                         {availableModels.map((model) => (
+                           <option key={model.id} value={model.id}>
+                             {model.name}
+                           </option>
+                         ))}
+                       </select>
                      </div>
                    </div>
                  </div>
-               )}
-             </div>
-
-             {/* Main Interface */}
-             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Left Panel - Input */}
-               <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Raw Prompt</h2>
-              <textarea
-                     className="w-full h-64 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                placeholder="Enter your raw prompt here..."
-                value={rawPrompt}
-                onChange={(e) => setRawPrompt(e.target.value)}
-              />
-                   
-                   {/* Feedback Examples */}
-                   <div className="mt-4 space-y-3">
+                 
+                 {useAI && selectedTechniques.length > 1 && (
+                   <div className="mt-2 p-1.5 bg-yellow-50 border border-yellow-200 rounded">
+                     <p className="text-xs text-yellow-800">
+                       AI perfection uses only the first selected technique.
+                     </p>
+                   </div>
+                 )}
+                 
+                 {/* Feedback Examples */}
+                 <div className="border-t pt-3 mt-3">
+                   <h3 className="text-xs font-semibold text-gray-800 mb-2">Feedback Examples</h3>
+                   <div className="space-y-2">
                      {/* Positive Feedback */}
-                     <div className="border border-green-200 rounded-lg">
+                     <div className="border border-green-200 rounded">
                        <button
                          onClick={() => setShowPositiveFeedback(!showPositiveFeedback)}
-                         className="w-full flex items-center justify-between p-3 text-left hover:bg-green-50 transition-colors rounded-lg"
+                         className="w-full flex items-center justify-between p-1.5 text-left hover:bg-green-50 transition-colors rounded"
                        >
-                         <div className="flex items-center space-x-2">
-                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                           <span className="font-medium text-green-800">Positive Output Examples</span>
+                         <div className="flex items-center space-x-1.5">
+                           <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                           <span className="text-xs font-medium text-green-800">Good Examples</span>
                          </div>
                          <div className={`transform transition-transform ${showPositiveFeedback ? 'rotate-180' : ''}`}>
-                           <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <svg className="w-2.5 h-2.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                            </svg>
                          </div>
                        </button>
                        {showPositiveFeedback && (
-                         <div className="px-3 pb-3">
+                         <div className="px-1.5 pb-1.5">
                            <textarea
-                             className="w-full h-24 p-3 border border-green-300 rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm"
-                             placeholder="Describe what good outputs should look like..."
+                             className="w-full h-16 p-1.5 border border-green-300 rounded text-xs resize-none focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none"
+                             placeholder="Good outputs look like..."
                              value={positiveExamples}
                              onChange={(e) => setPositiveExamples(e.target.value)}
                            />
@@ -755,26 +780,26 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                      </div>
 
                      {/* Negative Feedback */}
-                     <div className="border border-red-200 rounded-lg">
+                     <div className="border border-red-200 rounded">
                        <button
                          onClick={() => setShowNegativeFeedback(!showNegativeFeedback)}
-                         className="w-full flex items-center justify-between p-3 text-left hover:bg-red-50 transition-colors rounded-lg"
+                         className="w-full flex items-center justify-between p-1.5 text-left hover:bg-red-50 transition-colors rounded"
                        >
-                         <div className="flex items-center space-x-2">
-                           <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                           <span className="font-medium text-red-800">Negative Output Examples</span>
+                         <div className="flex items-center space-x-1.5">
+                           <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                           <span className="text-xs font-medium text-red-800">Bad Examples</span>
                          </div>
                          <div className={`transform transition-transform ${showNegativeFeedback ? 'rotate-180' : ''}`}>
-                           <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <svg className="w-2.5 h-2.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                            </svg>
                          </div>
                        </button>
                        {showNegativeFeedback && (
-                         <div className="px-3 pb-3">
+                         <div className="px-1.5 pb-1.5">
                            <textarea
-                             className="w-full h-24 p-3 border border-red-300 rounded-lg resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none text-sm"
-                             placeholder="Describe what bad outputs look like and should be avoided..."
+                             className="w-full h-16 p-1.5 border border-red-300 rounded text-xs resize-none focus:ring-1 focus:ring-red-500 focus:border-red-500 outline-none"
+                             placeholder="Bad outputs to avoid..."
                              value={negativeExamples}
                              onChange={(e) => setNegativeExamples(e.target.value)}
                            />
@@ -782,87 +807,251 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                        )}
                      </div>
                    </div>
-            </div>
+                 </div>
+               </div>
 
-                 {/* Optimization Techniques */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Perfection Techniques</h3>
-              <div className="space-y-3">
-                     {Object.entries(techniques).map(([key, technique]) => (
-                  <label key={key} className="flex items-start space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      checked={selectedTechniques.includes(key)}
-                      onChange={() => handleTechniqueToggle(key)}
-                           disabled={useAI && selectedTechniques.length === 1 && selectedTechniques.includes(key)}
-                    />
-                    <div className="flex-1">
-                           <div className="font-medium text-gray-900 text-sm">{technique.name}</div>
-                           <div className="text-xs text-gray-600">{technique.description}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-                   
-                   {useAI && selectedTechniques.length > 1 && (
-                     <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                       <p className="text-sm text-yellow-800">
-                         AI perfection uses only the first selected technique. Multiple techniques are used for template-based perfection only.
-                       </p>
+               {/* Main QuillBot-like Container */}
+               <div className="flex-1 bg-white rounded-lg shadow-sm border overflow-hidden flex flex-col h-full">
+                 {/* Language and Tone Tabs - Top Section (Compact) */}
+                 <div className="border-b bg-gray-50 p-2">
+                   {/* Language Selection */}
+                   <div className="mb-2">
+                     <div className="flex flex-wrap gap-1">
+                       {languages.map((language) => (
+                         <button
+                           key={language.code}
+                           onClick={() => setSelectedLanguage(language.code)}
+                           className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-all ${
+                             selectedLanguage === language.code
+                               ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                               : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                           }`}
+                         >
+                           <span>{language.flag}</span>
+                           <span>{language.name}</span>
+                         </button>
+                       ))}
                      </div>
-                   )}
-              
-              <button
-                onClick={generateOptimizedPrompt}
-                     disabled={isLoading}
-                     className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                     {isLoading ? 'Perfecting...' : '✨ Perfect Prompt'}
-              </button>
-            </div>
-          </div>
+                   </div>
 
-          {/* Right Panel - Output */}
-               <div className="space-y-6">
-                 {/* Perfected Prompt Section */}
-                 <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex justify-between items-center mb-4">
-                     <h2 className="text-lg font-semibold text-gray-800">Perfected Prompt</h2>
-                     {optimizedPrompt && !isLoading && (
-                  <button
-                    onClick={copyToClipboard}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors"
-                  >
-                         📋 Copy
-                  </button>
-                )}
-              </div>
-              
-                   <div className="min-h-[250px]">
-                     {isLoading ? (
-                       <div className="flex items-center justify-center h-full">
-                         <div className="text-center">
-                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                           <div className="text-gray-600">
-                             Perfecting with {getProviderDisplayName(selectedProvider)} {selectedModel}...
-                           </div>
-                         </div>
-                       </div>
-                     ) : optimizedPrompt ? (
-                  <pre className="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 p-4 rounded-lg h-full overflow-auto">
-                    {optimizedPrompt}
-                  </pre>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500">
-                    <div className="text-center">
-                           <div className="text-3xl mb-2">✨</div>
-                           <div className="text-base">Your perfected prompt will appear here</div>
-                         </div>
+                   {/* Tone Selection */}
+                   <div>
+                     <div className="flex flex-wrap gap-1 mb-2">
+                       {tones.map((tone) => (
+                         <button
+                           key={tone.id}
+                           onClick={() => setSelectedTone(tone.id)}
+                           className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                             selectedTone === tone.id
+                               ? 'bg-green-100 text-green-700 border border-green-300'
+                               : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                           }`}
+                           title={tone.description}
+                         >
+                           {tone.name}
+                         </button>
+                       ))}
+                     </div>
+                     
+                     {/* Custom Tone Input */}
+                     {selectedTone === 'Custom' && (
+                       <div className="mt-2">
+                         <input
+                           type="text"
+                           placeholder="Define your custom tone..."
+                           value={customTone}
+                           onChange={(e) => setCustomTone(e.target.value)}
+                           className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none text-xs bg-white"
+                         />
                        </div>
                      )}
                    </div>
                  </div>
+
+                 {/* Main Content Area - Combined Rectangle (Full Height) */}
+                 <div className="relative flex-1 p-6">
+                   <div className="border border-gray-300 rounded-lg bg-white overflow-hidden h-full">
+                     <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
+                       {/* Input Side */}
+                       <div className="relative border-r border-gray-300 h-full">
+                         <textarea
+                           className="w-full h-full p-4 resize-none focus:ring-0 focus:border-transparent outline-none text-sm bg-white"
+                           placeholder="To rewrite text, enter or paste it here and press 'Perfect'."
+                           value={rawPrompt}
+                           onChange={(e) => setRawPrompt(e.target.value)}
+                         />
+                         {/* Perfect Button - Bottom Right */}
+                         <div className="absolute bottom-4 right-4">
+                           <button
+                             onClick={generateOptimizedPrompt}
+                             disabled={isLoading || !rawPrompt.trim()}
+                             className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                           >
+                             {isLoading ? 'Perfecting...' : '✨ Perfect'}
+                           </button>
+                         </div>
+                       </div>
+
+                       {/* Output Side */}
+                       <div className="relative bg-gray-50 flex flex-col h-full">
+                         <div className="flex-1">
+                           {isLoading ? (
+                             <div className="flex items-center justify-center h-full">
+                               <div className="text-center">
+                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                                 <div className="text-gray-600">
+                                   Perfecting with {getProviderDisplayName(selectedProvider)} {selectedModel}...
+                                 </div>
+                               </div>
+                             </div>
+                           ) : optimizedPrompt ? (
+                             <pre className="whitespace-pre-wrap text-sm text-gray-800 p-4 h-full overflow-auto">
+                               {optimizedPrompt}
+                             </pre>
+                           ) : (
+                             <div className="flex items-center justify-center h-full text-gray-500">
+                               <div className="text-center">
+                                 <div className="text-3xl mb-2">✨</div>
+                                 <div className="text-base">Your perfected prompt will appear here</div>
+                               </div>
+                             </div>
+                           )}
+                         </div>
+                         
+                         {/* Copy Button - Bottom Right of Output */}
+                         {optimizedPrompt && !isLoading && (
+                           <div className="absolute bottom-4 right-4">
+                             <button
+                               onClick={copyToClipboard}
+                               className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                             >
+                               📋 Copy
+                             </button>
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+
+               {/* Right Side Options - QuillBot Style */}
+               <div className="absolute -right-16 top-4 flex flex-col space-y-2 z-20">
+
+
+                 {/* Settings Button */}
+                 <button
+                   onClick={() => {
+                     setRightSidebarContent('settings');
+                     setShowRightSidebar(true);
+                   }}
+                   className="w-10 h-10 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center transition-colors shadow-sm"
+                   title="Settings"
+                 >
+                   <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                   </svg>
+                 </button>
+
+                 {/* Help Button */}
+                 <button
+                   onClick={() => {
+                     setRightSidebarContent('help');
+                     setShowRightSidebar(true);
+                   }}
+                   className="w-10 h-10 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center transition-colors shadow-sm"
+                   title="Help & Info"
+                 >
+                   <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                   </svg>
+                 </button>
+               </div>
+
+               {/* Right Sidebar - QuillBot Style */}
+               {showRightSidebar && (
+                 <>
+                   {/* Backdrop */}
+                   <div 
+                     className="fixed inset-0 bg-black bg-opacity-25 z-40"
+                     onClick={() => setShowRightSidebar(false)}
+                   ></div>
+                   
+                   {/* Sidebar */}
+                   <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out">
+                     {/* Header */}
+                     <div className="flex items-center justify-between p-4 border-b">
+                       <h3 className="text-lg font-semibold text-gray-800">
+                         {rightSidebarContent === 'settings' && 'Settings'}
+                         {rightSidebarContent === 'help' && 'Help & Info'}
+                       </h3>
+                       <button
+                         onClick={() => setShowRightSidebar(false)}
+                         className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+                       >
+                         <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                         </svg>
+                       </button>
+                     </div>
+
+                     {/* Content */}
+                     <div className="p-4 h-full overflow-y-auto">
+                       {rightSidebarContent === 'settings' && (
+                         <div className="space-y-4">
+                           <div>
+                             <h4 className="text-sm font-semibold text-gray-800 mb-3">General Settings</h4>
+                             <div className="space-y-3">
+                               <div className="flex items-center justify-between">
+                                 <span className="text-sm text-gray-700">Use AI Perfection</span>
+                                 <input
+                                   type="checkbox"
+                                   checked={useAI}
+                                   onChange={(e) => setUseAI(e.target.checked)}
+                                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                 />
+                               </div>
+                               <div className="flex items-center justify-between">
+                                 <span className="text-sm text-gray-700">Auto-copy results</span>
+                                 <input
+                                   type="checkbox"
+                                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                 />
+                               </div>
+                             </div>
+                           </div>
+                         </div>
+                       )}
+
+                       {rightSidebarContent === 'help' && (
+                         <div className="space-y-4">
+                           <div>
+                             <h4 className="text-sm font-semibold text-gray-800 mb-3">About Prompt Perfector</h4>
+                             <p className="text-sm text-gray-600 mb-4">
+                               Transform your prompts with advanced AI techniques. Get better results from AI models with optimized prompts.
+                             </p>
+                             
+                             <h5 className="text-sm font-semibold text-gray-800 mb-2">How to use:</h5>
+                             <ul className="text-sm text-gray-600 space-y-1">
+                               <li>• Select perfection techniques from the left sidebar</li>
+                               <li>• Choose your preferred AI model</li>
+                               <li>• Enter your prompt and click Perfect</li>
+                               <li>• Copy and use the optimized result</li>
+                             </ul>
+                           </div>
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 </>
+               )}
+             </div>
+
+             {/* Test Section */}
+             <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">
+               {/* Test Section */}
+               <div className="space-y-6">
 
                  {/* Test Prompt Section */}
                  {optimizedPrompt && !isLoading && (
