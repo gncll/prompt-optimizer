@@ -117,4 +117,8 @@ export class AIService {
   static isProviderAvailable(provider) {
     return this.getAvailableProviders().includes(provider);
   }
+
+  static getAvailableModels(provider) {
+    return AVAILABLE_MODELS[provider] || [];
+  }
 } 

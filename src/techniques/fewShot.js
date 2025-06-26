@@ -75,6 +75,15 @@ TONE REQUIREMENT:
 The optimized prompt should include instructions for a ${feedback.tone.toLowerCase()} tone with ${toneDesc}.`;
     }
 
+    // Add target audience instruction if provided
+    if (feedback.targetAudience && feedback.targetAudience.trim()) {
+      systemPrompt += `
+
+TARGET AUDIENCE REQUIREMENT:
+The optimized prompt should be tailored for: ${feedback.targetAudience}
+Adjust the examples, language complexity, and explanations to be appropriate for this specific audience.`;
+    }
+
     systemPrompt += `
 
 Optimize the following prompt using few-shot technique:`;

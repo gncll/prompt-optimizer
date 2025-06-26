@@ -1,15 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { SignedIn, SignedOut, SignInButton, UserButton, SignIn, SignUp, useUser } from '@clerk/clerk-react';
 import ReactMarkdown from 'react-markdown';
 import './App.css';
-import { zeroShotTechnique } from './techniques/zeroShot';
-import { fewShotTechnique } from './techniques/fewShot';
-import { chainOfThoughtTechnique } from './techniques/chainOfThought';
-import { rolePromptingTechnique } from './techniques/rolePrompting';
-import { ragTechnique } from './techniques/rag';
-import { AIService, AI_PROVIDERS, AVAILABLE_MODELS } from './services/aiService';
+import { AIService, AI_PROVIDERS } from './services/aiService';
 import { FreeTrialService } from './services/freeTrialService';
+import * as techniqueModules from './techniques';
 
 // FAQ Item Component
 const FAQItem = ({ question, answer }) => {
@@ -330,11 +326,10 @@ const HeroSection = () => {
 };
 
 const techniques = {
-  'zero-shot': zeroShotTechnique,
-  'few-shot': fewShotTechnique,
-  'chain-of-thought': chainOfThoughtTechnique,
-  'role-prompting': rolePromptingTechnique,
-  'rag': ragTechnique
+  'zero-shot': techniqueModules.zeroShotTechnique,
+  'few-shot': techniqueModules.fewShotTechnique,
+  'chain-of-thought': techniqueModules.chainOfThoughtTechnique,
+  'role-prompting': techniqueModules.rolePromptingTechnique
 };
 
 function MainApp() {
@@ -342,7 +337,7 @@ function MainApp() {
   
   // Move all useState hooks to the top - before any conditional returns
   const [rawPrompt, setRawPrompt] = useState('');
-  const [selectedTechniques, setSelectedTechniques] = useState(['zero-shot']);
+  const [selectedTechnique, setSelectedTechnique] = useState('zero-shot');
   const [optimizedPrompt, setOptimizedPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [useAI, setUseAI] = useState(true);
@@ -367,8 +362,947 @@ function MainApp() {
   
   // Right sidebar states
   const [showRightSidebar, setShowRightSidebar] = useState(false);
-  const [rightSidebarContent, setRightSidebarContent] = useState('');
+  const [rightSidebarContent, setRightSidebarContent] = useState('settings');
   
+  // Continue Building states
+  const [showContinueModal, setShowContinueModal] = useState(false);
+  const [continuePrompt, setContinuePrompt] = useState('');
+  const [isContinueLoading, setIsContinueLoading] = useState(false);
+  
+  // Templates system
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+
+  // Template data
+  const templates = {
+    writing: {
+      name: '📝 Writing',
+      items: {
+        'blog-post': {
+          name: 'Blog Post Generator',
+          template: `Write a comprehensive blog post about [TOPIC].
+
+Requirements:
+- 1500-2000 words
+- Include an engaging introduction
+- Use 3-5 main headings (H2)
+- Add practical examples and actionable tips
+- Include a compelling conclusion with call-to-action
+- Write in a conversational yet professional tone
+- Target audience: [DESCRIBE AUDIENCE]
+
+Topic: [INSERT YOUR TOPIC HERE]`
+        },
+        'email-assistant': {
+          name: 'Email Assistant',
+          template: `Write a professional email for the following situation:
+
+Context: [DESCRIBE THE SITUATION]
+Recipient: [WHO YOU'RE WRITING TO]
+Purpose: [WHAT YOU WANT TO ACHIEVE]
+Tone: [FORMAL/INFORMAL/FRIENDLY]
+
+Key points to include:
+- [POINT 1]
+- [POINT 2]
+- [POINT 3]
+
+Please make it clear, concise, and appropriate for the context.`
+        },
+        'marketing-copy': {
+          name: 'Marketing Copy',
+          template: `Create compelling marketing copy for:
+
+Product/Service: [DESCRIBE WHAT YOU'RE MARKETING]
+Target Audience: [WHO IS YOUR IDEAL CUSTOMER]
+Key Benefits: [LIST 3-5 MAIN BENEFITS]
+Call-to-Action: [WHAT ACTION DO YOU WANT THEM TO TAKE]
+
+Copy Type: [WEBSITE/EMAIL CAMPAIGN/SOCIAL MEDIA/AD]
+Tone: [PERSUASIVE/FRIENDLY/URGENT/PROFESSIONAL]
+
+Include:
+- Attention-grabbing headline
+- Problem/solution narrative
+- Social proof elements
+- Clear value proposition
+- Strong call-to-action`
+        },
+        'social-media': {
+          name: 'Social Media Post',
+          template: `Create an engaging social media post for:
+
+Platform: [INSTAGRAM/TWITTER/LINKEDIN/FACEBOOK]
+Topic: [WHAT ARE YOU POSTING ABOUT]
+Goal: [ENGAGEMENT/BRAND AWARENESS/LEAD GENERATION/SALES]
+
+Content Requirements:
+- Hook in the first line
+- Include relevant hashtags
+- Call-to-action
+- Optimal length for platform
+- Engaging and shareable
+
+Tone: [CASUAL/PROFESSIONAL/HUMOROUS/INSPIRATIONAL]`
+        }
+      }
+    },
+    code: {
+      name: '💻 Code',
+      items: {
+        'code-review': {
+          name: 'Code Review',
+          template: `Please review this code and provide detailed feedback:
+
+Code Language: [PROGRAMMING LANGUAGE]
+Context: [WHAT DOES THIS CODE DO]
+
+[PASTE YOUR CODE HERE]
+
+Please analyze:
+- Code quality and readability
+- Performance optimizations
+- Security considerations
+- Best practices adherence
+- Potential bugs or issues
+- Suggestions for improvement
+
+Provide specific examples and explanations for each point.`
+        },
+        'bug-debugging': {
+          name: 'Bug Debugging',
+          template: `Help me debug this issue:
+
+Programming Language: [LANGUAGE]
+Framework/Library: [IF APPLICABLE]
+
+Problem Description:
+[DESCRIBE THE BUG/ERROR]
+
+Expected Behavior:
+[WHAT SHOULD HAPPEN]
+
+Actual Behavior:
+[WHAT ACTUALLY HAPPENS]
+
+Error Messages:
+[PASTE ANY ERROR MESSAGES]
+
+Code:
+[PASTE RELEVANT CODE]
+
+Please provide:
+- Root cause analysis
+- Step-by-step debugging approach
+- Specific fix recommendations
+- Prevention strategies`
+        },
+        'code-explanation': {
+          name: 'Code Explanation',
+          template: `Explain this code in detail:
+
+Programming Language: [LANGUAGE]
+Audience Level: [BEGINNER/INTERMEDIATE/ADVANCED]
+
+[PASTE YOUR CODE HERE]
+
+Please provide:
+- Line-by-line explanation
+- Key concepts and terminology
+- How it works overall
+- Use cases and applications
+- Alternative approaches
+- Best practices demonstrated
+
+Make it educational and easy to understand.`
+        },
+        'algorithm-design': {
+          name: 'Algorithm Design',
+          template: `Design an algorithm for the following problem:
+
+Problem Statement:
+[DESCRIBE THE PROBLEM TO SOLVE]
+
+Requirements:
+- Input: [WHAT DATA/PARAMETERS]
+- Output: [EXPECTED RESULT]
+- Constraints: [TIME/SPACE LIMITATIONS]
+- Edge Cases: [SPECIAL SCENARIOS TO HANDLE]
+
+Preferred Language: [PROGRAMMING LANGUAGE]
+
+Please provide:
+- Algorithm approach and strategy
+- Step-by-step pseudocode
+- Implementation in code
+- Time and space complexity analysis
+- Test cases and examples`
+        }
+      }
+    },
+    analysis: {
+      name: '📊 Analysis',
+      items: {
+        'data-analysis': {
+          name: 'Data Analysis',
+          template: `Analyze this data and provide insights:
+
+Data Type: [SALES/MARKETING/FINANCIAL/SURVEY/OTHER]
+Analysis Goal: [WHAT DO YOU WANT TO DISCOVER]
+
+Data Description:
+[DESCRIBE YOUR DATASET]
+
+Key Questions:
+- [QUESTION 1]
+- [QUESTION 2]
+- [QUESTION 3]
+
+Please provide:
+- Statistical summary
+- Key trends and patterns
+- Actionable insights
+- Recommendations
+- Visualizations suggestions
+- Next steps for deeper analysis`
+        },
+        'market-research': {
+          name: 'Market Research',
+          template: `Conduct market research for:
+
+Industry: [INDUSTRY/SECTOR]
+Product/Service: [WHAT YOU'RE RESEARCHING]
+Target Market: [GEOGRAPHIC/DEMOGRAPHIC]
+
+Research Areas:
+- Market size and growth potential
+- Competitor analysis
+- Customer needs and pain points
+- Pricing strategies
+- Market trends and opportunities
+- Regulatory considerations
+
+Please provide:
+- Comprehensive market overview
+- Competitive landscape
+- Customer insights
+- Market opportunities
+- Risk assessment
+- Strategic recommendations`
+        },
+        'swot-analysis': {
+          name: 'SWOT Analysis',
+          template: `Perform a SWOT analysis for:
+
+Company/Product/Project: [NAME]
+Industry: [INDUSTRY]
+Context: [CURRENT SITUATION]
+
+Please analyze:
+
+STRENGTHS:
+- Internal positive factors
+- Competitive advantages
+- Resources and capabilities
+
+WEAKNESSES:
+- Internal limitations
+- Areas for improvement
+- Resource gaps
+
+OPPORTUNITIES:
+- External positive factors
+- Market trends
+- Growth possibilities
+
+THREATS:
+- External challenges
+- Market risks
+- Competitive pressures
+
+Provide strategic recommendations based on the analysis.`
+        },
+        'competitor-analysis': {
+          name: 'Competitor Analysis',
+          template: `Analyze competitors in the following market:
+
+Industry: [INDUSTRY]
+Your Company/Product: [YOUR OFFERING]
+Main Competitors: [LIST 3-5 COMPETITORS]
+
+Analysis Framework:
+- Product/service offerings
+- Pricing strategies
+- Marketing approaches
+- Strengths and weaknesses
+- Market positioning
+- Customer reviews and feedback
+- Digital presence
+
+For each competitor, provide:
+- Company overview
+- Product analysis
+- Pricing comparison
+- Marketing strategy
+- Competitive advantages
+- Vulnerabilities
+
+Conclude with strategic recommendations.`
+        }
+      }
+    },
+    creative: {
+      name: '🎨 Creative',
+      items: {
+        'story-writing': {
+          name: 'Story Writing',
+          template: `Write a creative story with these elements:
+
+Genre: [FANTASY/SCI-FI/MYSTERY/ROMANCE/THRILLER/OTHER]
+Setting: [WHERE AND WHEN]
+Main Character: [DESCRIBE PROTAGONIST]
+Conflict: [CENTRAL PROBLEM/CHALLENGE]
+Theme: [UNDERLYING MESSAGE]
+
+Story Requirements:
+- Length: [SHORT STORY/CHAPTER/FULL STORY]
+- Tone: [DARK/LIGHT/HUMOROUS/SERIOUS]
+- Audience: [TARGET READERS]
+
+Key Elements to Include:
+- [SPECIFIC PLOT POINT 1]
+- [SPECIFIC PLOT POINT 2]
+- [SPECIFIC PLOT POINT 3]
+
+Create an engaging narrative with strong character development and compelling plot progression.`
+        },
+        'brainstorming': {
+          name: 'Brainstorming',
+          template: `Help me brainstorm ideas for:
+
+Topic/Challenge: [WHAT YOU NEED IDEAS FOR]
+Context: [BACKGROUND INFORMATION]
+Goals: [WHAT YOU WANT TO ACHIEVE]
+Constraints: [LIMITATIONS TO CONSIDER]
+
+Brainstorming Parameters:
+- Quantity: [HOW MANY IDEAS NEEDED]
+- Type: [PRACTICAL/CREATIVE/INNOVATIVE]
+- Audience: [WHO WILL USE/SEE THESE IDEAS]
+
+Please generate:
+- Diverse range of ideas
+- Both conventional and creative approaches
+- Pros and cons for top ideas
+- Implementation considerations
+- Next steps for development
+
+Think outside the box and be creative!`
+        },
+        'character-creation': {
+          name: 'Character Creation',
+          template: `Create a detailed character for:
+
+Story Type: [NOVEL/GAME/SCREENPLAY/OTHER]
+Genre: [FANTASY/SCI-FI/CONTEMPORARY/HISTORICAL]
+Character Role: [PROTAGONIST/ANTAGONIST/SUPPORTING]
+
+Character Details:
+- Name and age
+- Physical appearance
+- Personality traits
+- Background and history
+- Motivations and goals
+- Fears and weaknesses
+- Skills and abilities
+- Relationships with others
+
+Additional Context:
+- Setting: [WHERE THEY EXIST]
+- Time Period: [WHEN]
+- Key Conflict: [WHAT THEY FACE]
+
+Create a complex, believable character with depth and internal consistency.`
+        },
+        'world-building': {
+          name: 'World Building',
+          template: `Help me build a fictional world for:
+
+Project Type: [NOVEL/GAME/SCREENPLAY/CAMPAIGN]
+Genre: [FANTASY/SCI-FI/ALTERNATE HISTORY/OTHER]
+Scale: [SINGLE CITY/COUNTRY/PLANET/UNIVERSE]
+
+World Elements to Develop:
+- Geography and environment
+- History and timeline
+- Cultures and societies
+- Political systems
+- Economy and trade
+- Technology level
+- Magic/supernatural elements
+- Languages and communication
+- Conflicts and tensions
+
+Key Themes: [WHAT THEMES TO EXPLORE]
+Tone: [DARK/LIGHT/REALISTIC/FANTASTICAL]
+
+Create a cohesive, believable world with internal logic and rich detail.`
+        }
+      }
+    }
+  };
+
+  // Gamification system
+  const [userStats, setUserStats] = useState({
+    xp: 0,
+    level: 1,
+    streak: 0,
+    totalPrompts: 0,
+    badges: [],
+    lastActivity: null
+  });
+  const [showGameStats, setShowGameStats] = useState(false);
+  const [recentAchievement, setRecentAchievement] = useState(null);
+
+  // Favorites system
+  const [favoritePrompts, setFavoritePrompts] = useState([]);
+
+
+  // Persona system
+  const [showPersonas, setShowPersonas] = useState(false);
+  const [selectedPersona, setSelectedPersona] = useState('');
+  const personaButtonRef = useRef(null);
+  const [personaDropdownStyle, setPersonaDropdownStyle] = useState({});
+
+  // Target Audience system
+  const [showTargetAudience, setShowTargetAudience] = useState(false);
+  const [selectedTargetAudience, setSelectedTargetAudience] = useState('');
+  const audienceButtonRef = useRef(null);
+  const [audienceDropdownStyle, setAudienceDropdownStyle] = useState({});
+
+  // Persona library
+  const personas = {
+    business: {
+      name: "💼 Business & Marketing",
+      items: {
+        marketingManager: {
+          name: "Marketing Manager",
+          emoji: "📊",
+          description: "Experienced marketing professional with strategic thinking",
+          prompt: "You are an experienced Marketing Manager with 10+ years in digital marketing, brand strategy, and campaign optimization. You have deep knowledge of consumer behavior, market analysis, and ROI-driven marketing tactics. You think strategically about brand positioning and customer acquisition."
+        },
+        salesDirector: {
+          name: "Sales Director",
+          emoji: "💰",
+          description: "Results-driven sales leader with negotiation expertise",
+          prompt: "You are a seasoned Sales Director with extensive experience in B2B and B2C sales, team leadership, and revenue growth. You excel at relationship building, negotiation strategies, and closing complex deals. You understand sales funnels, customer psychology, and performance metrics."
+        },
+        businessConsultant: {
+          name: "Business Consultant",
+          emoji: "📈",
+          description: "Strategic advisor with broad business expertise",
+          prompt: "You are a Senior Business Consultant with expertise in strategy, operations, and organizational development. You have worked with companies of all sizes, from startups to Fortune 500. You excel at problem-solving, process optimization, and providing actionable business insights."
+        },
+        entrepreneur: {
+          name: "Serial Entrepreneur",
+          emoji: "🚀",
+          description: "Innovative startup founder with multiple successful exits",
+          prompt: "You are a successful Serial Entrepreneur who has founded and scaled multiple companies. You have experience in fundraising, product development, team building, and market validation. You think creatively about business opportunities and understand the startup ecosystem deeply."
+        }
+      }
+    },
+    education: {
+      name: "🎓 Education & Training",
+      items: {
+        elementaryTeacher: {
+          name: "Elementary School Teacher",
+          emoji: "👩‍🏫",
+          description: "Patient educator focused on young learners",
+          prompt: "You are a dedicated Elementary School Teacher with 8+ years of experience teaching children ages 6-12. You excel at breaking down complex concepts into simple, engaging explanations. You understand child psychology, learning styles, and how to make education fun and interactive."
+        },
+        professor: {
+          name: "University Professor",
+          emoji: "🎓",
+          description: "Academic expert with research background",
+          prompt: "You are a University Professor with a PhD in your field and extensive research experience. You are skilled at explaining complex academic concepts, conducting thorough analysis, and providing evidence-based insights. You value critical thinking and scholarly rigor."
+        },
+        corporateTrainer: {
+          name: "Corporate Trainer",
+          emoji: "📚",
+          description: "Professional development specialist",
+          prompt: "You are an experienced Corporate Trainer specializing in professional development, leadership skills, and workplace communication. You excel at designing engaging training programs, facilitating workshops, and helping adults learn new skills effectively."
+        },
+        onlineTutor: {
+          name: "Online Tutor",
+          emoji: "💻",
+          description: "Personalized learning specialist",
+          prompt: "You are a skilled Online Tutor with expertise in personalized learning approaches. You adapt your teaching style to individual learning needs, use technology effectively for education, and excel at one-on-one instruction across various subjects."
+        }
+      }
+    },
+    technology: {
+      name: "💻 Technology & Development",
+      items: {
+        seniorDeveloper: {
+          name: "Senior Software Developer",
+          emoji: "👨‍💻",
+          description: "Expert programmer with full-stack experience",
+          prompt: "You are a Senior Software Developer with 10+ years of experience in full-stack development. You are proficient in multiple programming languages, software architecture, and best practices. You excel at code review, mentoring junior developers, and solving complex technical challenges."
+        },
+        dataScientist: {
+          name: "Data Scientist",
+          emoji: "📊",
+          description: "Analytics expert with machine learning knowledge",
+          prompt: "You are an experienced Data Scientist with expertise in machine learning, statistical analysis, and data visualization. You are skilled in Python, R, SQL, and various ML frameworks. You excel at extracting insights from complex datasets and communicating findings to non-technical stakeholders."
+        },
+        cybersecurityExpert: {
+          name: "Cybersecurity Expert",
+          emoji: "🔒",
+          description: "Security specialist with threat analysis skills",
+          prompt: "You are a Cybersecurity Expert with extensive experience in threat analysis, penetration testing, and security architecture. You stay current with the latest security threats, compliance requirements, and defense strategies. You think like both an attacker and defender."
+        },
+        productManager: {
+          name: "Tech Product Manager",
+          emoji: "📱",
+          description: "Strategic product leader with user focus",
+          prompt: "You are an experienced Tech Product Manager with a strong background in product strategy, user experience, and agile development. You excel at balancing user needs, business objectives, and technical constraints. You understand market research, product analytics, and stakeholder management."
+        }
+      }
+    },
+    creative: {
+      name: "🎨 Creative & Content",
+      items: {
+        contentCreator: {
+          name: "Social Media Content Creator",
+          emoji: "📸",
+          description: "Engaging content specialist with viral expertise",
+          prompt: "You are a successful Social Media Content Creator with a knack for creating viral, engaging content. You understand platform algorithms, trending topics, and audience psychology. You're witty, creative, and know how to capture attention in the digital space."
+        },
+        copywriter: {
+          name: "Professional Copywriter",
+          emoji: "✍️",
+          description: "Persuasive writing expert with conversion focus",
+          prompt: "You are an experienced Professional Copywriter specializing in persuasive, conversion-focused content. You understand consumer psychology, brand voice, and how to craft compelling messages that drive action. You excel at headlines, sales copy, and storytelling."
+        },
+        designer: {
+          name: "Creative Director",
+          emoji: "🎨",
+          description: "Visual design expert with brand expertise",
+          prompt: "You are a Creative Director with extensive experience in visual design, brand strategy, and creative campaigns. You have a keen eye for aesthetics, understand design principles, and excel at translating brand concepts into compelling visual experiences."
+        },
+        journalist: {
+          name: "Investigative Journalist",
+          emoji: "📰",
+          description: "Research-focused reporter with fact-checking skills",
+          prompt: "You are an experienced Investigative Journalist with strong research skills, fact-checking expertise, and a commitment to uncovering the truth. You excel at asking probing questions, verifying sources, and presenting complex information in clear, compelling narratives."
+        }
+      }
+    },
+    consulting: {
+      name: "🤝 Consulting & Advisory",
+      items: {
+        managementConsultant: {
+          name: "Management Consultant",
+          emoji: "💼",
+          description: "Strategic problem solver with analytical skills",
+          prompt: "You are a Senior Management Consultant from a top-tier consulting firm with expertise in strategy, operations, and organizational transformation. You excel at structured problem-solving, data analysis, and delivering actionable recommendations to C-level executives."
+        },
+        financialAdvisor: {
+          name: "Financial Advisor",
+          emoji: "💹",
+          description: "Investment expert with wealth management focus",
+          prompt: "You are a Certified Financial Advisor with extensive experience in investment planning, wealth management, and financial strategy. You understand market dynamics, risk assessment, and long-term financial planning. You excel at explaining complex financial concepts clearly."
+        },
+        hrConsultant: {
+          name: "HR Consultant",
+          emoji: "👥",
+          description: "People management expert with organizational skills",
+          prompt: "You are an experienced HR Consultant specializing in talent management, organizational development, and workplace culture. You understand employment law, performance management, and how to build effective teams. You excel at balancing employee needs with business objectives."
+        },
+        legalAdvisor: {
+          name: "Legal Advisor",
+          emoji: "⚖️",
+          description: "Legal expert with contract and compliance knowledge",
+          prompt: "You are an experienced Legal Advisor with expertise in business law, contracts, and regulatory compliance. You excel at identifying legal risks, providing clear legal guidance, and translating complex legal concepts into practical business advice."
+        }
+      }
+    }
+  };
+
+  // Target Audience library
+  const targetAudiences = {
+    children: {
+      name: "👶 Children & Young Learners",
+      items: {
+        preschooler: {
+          name: "Preschooler (3-5 years)",
+          emoji: "🧸",
+          description: "Very simple language, visual concepts, playful tone",
+          instruction: "Explain this in very simple words that a 3-5 year old child can understand. Use fun examples, avoid complex concepts, and make it playful and engaging."
+        },
+        elementaryStudent: {
+          name: "Elementary Student (6-11 years)",
+          emoji: "📚",
+          description: "Clear explanations, relatable examples, encouraging tone",
+          instruction: "Explain this for elementary school children (ages 6-11). Use clear, simple language with relatable examples from their daily life. Be encouraging and make learning fun."
+        },
+        teenager: {
+          name: "Teenager (12-17 years)",
+          emoji: "🎒",
+          description: "Age-appropriate complexity, relevant examples, respectful tone",
+          instruction: "Explain this for teenagers (ages 12-17). Use age-appropriate language, include relevant examples from their world, and maintain a respectful but engaging tone."
+        },
+        youngAdult: {
+          name: "Young Adult (18-25 years)",
+          emoji: "🎓",
+          description: "Modern references, practical applications, relatable tone",
+          instruction: "Explain this for young adults (ages 18-25). Use modern references, focus on practical applications, and maintain a relatable, contemporary tone."
+        }
+      }
+    },
+    professionals: {
+      name: "👔 Business Professionals",
+      items: {
+        executive: {
+          name: "C-Level Executive",
+          emoji: "💼",
+          description: "Strategic focus, high-level overview, decisive tone",
+          instruction: "Present this for C-level executives. Focus on strategic implications, provide high-level overviews, use decisive language, and emphasize business impact and ROI."
+        },
+        manager: {
+          name: "Middle Manager",
+          emoji: "📊",
+          description: "Actionable insights, team implications, practical tone",
+          instruction: "Present this for middle managers. Provide actionable insights, consider team implications, use practical language, and focus on implementation strategies."
+        },
+        specialist: {
+          name: "Subject Matter Expert",
+          emoji: "🔬",
+          description: "Technical depth, industry terminology, analytical tone",
+          instruction: "Present this for subject matter experts. Use appropriate technical depth, include industry terminology, maintain an analytical tone, and provide detailed insights."
+        },
+        newEmployee: {
+          name: "New Employee",
+          emoji: "🆕",
+          description: "Clear guidance, supportive tone, foundational concepts",
+          instruction: "Explain this for new employees. Provide clear guidance, use a supportive tone, explain foundational concepts, and include helpful context about company culture."
+        }
+      }
+    },
+    technical: {
+      name: "💻 Technical Audience",
+      items: {
+        developer: {
+          name: "Software Developer",
+          emoji: "👨‍💻",
+          description: "Code examples, technical accuracy, implementation focus",
+          instruction: "Present this for software developers. Include relevant code examples, ensure technical accuracy, focus on implementation details, and use appropriate programming terminology."
+        },
+        engineer: {
+          name: "Engineer",
+          emoji: "⚙️",
+          description: "Technical specifications, precise language, problem-solving focus",
+          instruction: "Present this for engineers. Use technical specifications, maintain precise language, focus on problem-solving approaches, and include relevant technical details."
+        },
+        dataScientist: {
+          name: "Data Scientist",
+          emoji: "📈",
+          description: "Statistical concepts, analytical methods, data-driven insights",
+          instruction: "Present this for data scientists. Include statistical concepts, discuss analytical methods, provide data-driven insights, and use appropriate mathematical terminology."
+        },
+        itAdmin: {
+          name: "IT Administrator",
+          emoji: "🖥️",
+          description: "System requirements, security considerations, operational focus",
+          instruction: "Present this for IT administrators. Include system requirements, address security considerations, focus on operational aspects, and provide implementation guidelines."
+        }
+      }
+    },
+    general: {
+      name: "🌐 General Public",
+      items: {
+        generalPublic: {
+          name: "General Public",
+          emoji: "👥",
+          description: "Accessible language, broad appeal, inclusive tone",
+          instruction: "Present this for the general public. Use accessible language that anyone can understand, maintain broad appeal, use an inclusive tone, and avoid jargon."
+        },
+        seniors: {
+          name: "Senior Citizens (65+)",
+          emoji: "👴",
+          description: "Patient explanations, respectful tone, clear structure",
+          instruction: "Explain this for senior citizens. Use patient explanations, maintain a respectful tone, provide clear structure, and avoid assuming familiarity with modern technology."
+        },
+        parents: {
+          name: "Parents",
+          emoji: "👨‍👩‍👧‍👦",
+          description: "Family-focused, practical advice, supportive tone",
+          instruction: "Present this for parents. Focus on family implications, provide practical advice, use a supportive tone, and consider the challenges of parenting."
+        },
+        educators: {
+          name: "Teachers & Educators",
+          emoji: "👩‍🏫",
+          description: "Educational value, classroom applications, instructional tone",
+          instruction: "Present this for teachers and educators. Emphasize educational value, include classroom applications, use an instructional tone, and consider different learning styles."
+        }
+      }
+    },
+    specialized: {
+      name: "🎯 Specialized Groups",
+      items: {
+        researcher: {
+          name: "Academic Researcher",
+          emoji: "🔬",
+          description: "Scholarly tone, evidence-based, methodological rigor",
+          instruction: "Present this for academic researchers. Use scholarly tone, provide evidence-based information, maintain methodological rigor, and include relevant citations or research context."
+        },
+        journalist: {
+          name: "Journalist/Media",
+          emoji: "📰",
+          description: "Newsworthy angles, public interest, clear facts",
+          instruction: "Present this for journalists and media professionals. Highlight newsworthy angles, consider public interest, provide clear facts, and structure information for news reporting."
+        },
+        investor: {
+          name: "Investor",
+          emoji: "💰",
+          description: "Financial implications, market analysis, risk assessment",
+          instruction: "Present this for investors. Focus on financial implications, provide market analysis, include risk assessment, and emphasize potential returns and investment opportunities."
+        },
+        policyMaker: {
+          name: "Policy Maker",
+          emoji: "🏛️",
+          description: "Regulatory implications, public impact, policy recommendations",
+          instruction: "Present this for policy makers. Address regulatory implications, consider public impact, provide policy recommendations, and use language appropriate for government officials."
+        }
+      }
+    }
+  };
+
+  // Load gamification data from localStorage
+  useEffect(() => {
+    const savedStats = localStorage.getItem('promptPerfectorStats');
+    if (savedStats) {
+      const stats = JSON.parse(savedStats);
+      setUserStats(stats);
+    }
+    
+    // Load favorite prompts
+    const savedFavorites = localStorage.getItem('promptPerfectorFavorites');
+    if (savedFavorites) {
+      const favorites = JSON.parse(savedFavorites);
+      setFavoritePrompts(favorites);
+    }
+  }, []);
+
+  // Calculate persona dropdown position
+  useEffect(() => {
+    if (showPersonas && personaButtonRef.current) {
+      const rect = personaButtonRef.current.getBoundingClientRect();
+      const style = {
+        position: 'fixed',
+        top: rect.bottom + 4,
+        left: rect.left,
+        minWidth: Math.max(280, rect.width),
+        maxWidth: 320,
+        zIndex: 9999
+      };
+      
+      // Adjust if dropdown would go off screen
+      const maxHeight = 320;
+      if (style.top + maxHeight > window.innerHeight) {
+        style.top = rect.top - maxHeight - 4;
+      }
+      
+      if (style.left + style.minWidth > window.innerWidth) {
+        style.left = window.innerWidth - style.minWidth - 10;
+      }
+      
+      setPersonaDropdownStyle(style);
+    }
+  }, [showPersonas]);
+
+  // Calculate target audience dropdown position
+  useEffect(() => {
+    if (showTargetAudience && audienceButtonRef.current) {
+      const rect = audienceButtonRef.current.getBoundingClientRect();
+      const style = {
+        position: 'fixed',
+        top: rect.bottom + 4,
+        left: rect.left,
+        minWidth: Math.max(280, rect.width),
+        maxWidth: 320,
+        zIndex: 9999
+      };
+      
+      // Adjust if dropdown would go off screen
+      const maxHeight = 320;
+      if (style.top + maxHeight > window.innerHeight) {
+        style.top = rect.top - maxHeight - 4;
+      }
+      
+      if (style.left + style.minWidth > window.innerWidth) {
+        style.left = window.innerWidth - style.minWidth - 10;
+      }
+      
+      setAudienceDropdownStyle(style);
+    }
+  }, [showTargetAudience]);
+
+  // Save gamification data to localStorage
+  const saveStats = (newStats) => {
+    localStorage.setItem('promptPerfectorStats', JSON.stringify(newStats));
+    setUserStats(newStats);
+  };
+
+  // Save favorite prompts to localStorage
+  const saveFavorites = (favorites) => {
+    localStorage.setItem('promptPerfectorFavorites', JSON.stringify(favorites));
+    setFavoritePrompts(favorites);
+  };
+
+  // Add prompt to favorites
+  const addToFavorites = () => {
+    if (!optimizedPrompt.trim()) return;
+    
+    const newFavorite = {
+      id: Date.now(),
+      originalPrompt: rawPrompt,
+      optimizedPrompt: optimizedPrompt,
+      technique: selectedTechnique,
+      language: selectedLanguage,
+      tone: selectedTone === 'Custom' ? customTone : selectedTone,
+      createdAt: new Date().toISOString(),
+      score: calculatePromptScore(rawPrompt)
+    };
+    
+    const updatedFavorites = [newFavorite, ...favoritePrompts];
+    saveFavorites(updatedFavorites);
+  };
+
+  // Remove from favorites
+  const removeFromFavorites = (id) => {
+    const updatedFavorites = favoritePrompts.filter(fav => fav.id !== id);
+    saveFavorites(updatedFavorites);
+  };
+
+  // Check if current prompt is favorited
+  const isCurrentPromptFavorited = () => {
+    return favoritePrompts.some(fav => 
+      fav.originalPrompt === rawPrompt && fav.optimizedPrompt === optimizedPrompt
+    );
+  };
+
+  // Calculate prompt quality score (0-100)
+  const calculatePromptScore = (prompt) => {
+    if (!prompt) return 0;
+    
+    let score = 30; // Base score
+    
+    // Length scoring (optimal 50-200 words)
+    const wordCount = prompt.split(' ').length;
+    if (wordCount >= 20 && wordCount <= 200) score += 20;
+    else if (wordCount >= 10) score += 10;
+    
+    // Clarity indicators
+    if (prompt.includes('?')) score += 5; // Questions
+    if (prompt.match(/\b(please|kindly|could you)\b/i)) score += 5; // Politeness
+    if (prompt.match(/\b(specific|detailed|comprehensive)\b/i)) score += 10; // Specificity
+    if (prompt.match(/\b(example|format|style)\b/i)) score += 10; // Context
+    
+    // Structure scoring
+    if (prompt.includes(':')) score += 5; // Lists/structure
+    if (prompt.includes('-') || prompt.includes('•')) score += 5; // Bullet points
+    if (prompt.match(/\n/g)?.length > 1) score += 5; // Multi-line structure
+    
+    // Deduct for issues
+    if (prompt.length < 20) score -= 20; // Too short
+    if (prompt.length > 1000) score -= 10; // Too long
+    if (!prompt.match(/[.!?]$/)) score -= 5; // No proper ending
+    
+    return Math.min(100, Math.max(0, score));
+  };
+
+  // XP calculation based on score
+  const calculateXP = (score) => {
+    if (score >= 90) return 50;
+    if (score >= 80) return 40;
+    if (score >= 70) return 30;
+    if (score >= 60) return 20;
+    if (score >= 50) return 15;
+    return 10;
+  };
+
+  // Level calculation
+  const calculateLevel = (xp) => {
+    return Math.floor(xp / 200) + 1;
+  };
+
+  // Check for new achievements
+  const checkAchievements = (newStats) => {
+    const achievements = [];
+    
+    // First prompt
+    if (newStats.totalPrompts === 1) {
+      achievements.push({ id: 'first_prompt', name: 'First Steps', description: 'Created your first prompt!' });
+    }
+    
+    // Prompt milestones
+    if (newStats.totalPrompts === 10) {
+      achievements.push({ id: 'prompt_10', name: 'Getting Started', description: '10 prompts created!' });
+    }
+    if (newStats.totalPrompts === 50) {
+      achievements.push({ id: 'prompt_50', name: 'Prompt Master', description: '50 prompts created!' });
+    }
+    if (newStats.totalPrompts === 100) {
+      achievements.push({ id: 'prompt_100', name: 'Prompt Legend', description: '100 prompts created!' });
+    }
+    
+    // Level achievements
+    if (newStats.level === 5) {
+      achievements.push({ id: 'level_5', name: 'Rising Star', description: 'Reached level 5!' });
+    }
+    if (newStats.level === 10) {
+      achievements.push({ id: 'level_10', name: 'Expert', description: 'Reached level 10!' });
+    }
+    
+    // Streak achievements
+    if (newStats.streak === 3) {
+      achievements.push({ id: 'streak_3', name: 'On Fire', description: '3-day streak!' });
+    }
+    if (newStats.streak === 7) {
+      achievements.push({ id: 'streak_7', name: 'Weekly Warrior', description: '7-day streak!' });
+    }
+    
+    // Add new achievements to user's collection
+    achievements.forEach(achievement => {
+      if (!newStats.badges.find(b => b.id === achievement.id)) {
+        newStats.badges.push(achievement);
+        setRecentAchievement(achievement);
+        setTimeout(() => setRecentAchievement(null), 5000);
+      }
+    });
+    
+    return newStats;
+  };
+
+  // Update streak
+  const updateStreak = (stats) => {
+    const today = new Date().toDateString();
+    const lastActivity = stats.lastActivity ? new Date(stats.lastActivity).toDateString() : null;
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    
+    if (lastActivity === today) {
+      // Same day, no change
+      return stats.streak;
+    } else if (lastActivity === yesterday) {
+      // Consecutive day
+      return stats.streak + 1;
+    } else {
+      // Streak broken
+      return 1;
+    }
+  };
+
   // Add debugging for authentication state
   useEffect(() => {
     console.log('MainApp Auth Debug:', {
@@ -413,7 +1347,7 @@ function MainApp() {
   }
 
   const availableProviders = AIService.getAvailableProviders();
-  const availableModels = AVAILABLE_MODELS[selectedProvider] || [];
+  const availableModels = AIService.getAvailableModels(selectedProvider) || [];
   
   // Language and Tone options
   const languages = [
@@ -436,28 +1370,44 @@ function MainApp() {
   ];
 
   const handleTechniqueToggle = (technique) => {
-    setSelectedTechniques(prev => {
-      if (prev.includes(technique)) {
-        return prev.filter(t => t !== technique);
-      } else {
-        return [...prev, technique];
-      }
-    });
+    setSelectedTechnique(technique);
   };
 
   const handleProviderChange = (provider) => {
     setSelectedProvider(provider);
-    // Set default model for the selected provider
-    const models = AVAILABLE_MODELS[provider];
-    if (models && models.length > 0) {
-      if (provider === AI_PROVIDERS.OPENAI) {
-        setSelectedModel('o1-mini'); // Default to o1-mini for OpenAI
-      } else if (provider === AI_PROVIDERS.ANTHROPIC) {
-        setSelectedModel('claude-sonnet-4-20250514'); // Default to Claude 4 Sonnet for Anthropic
-      } else {
-        setSelectedModel(models[0].id); // First model for other providers
-      }
+    // Reset model selection when provider changes
+    const models = AIService.getAvailableModels(provider) || [];
+    if (models.length > 0) {
+      setSelectedModel(models[0].id);
     }
+  };
+
+  const handleTemplateSelect = (categoryKey, templateKey) => {
+    const template = templates[categoryKey].items[templateKey];
+    setRawPrompt(template.template);
+    setShowTemplates(false);
+    setSelectedTemplate(template.name);
+  };
+
+  const clearTemplate = () => {
+    setRawPrompt('');
+    setSelectedTemplate(null);
+    setOptimizedPrompt('');
+    setTestOutput('');
+    setTestInput('');
+    setContinuePrompt('');
+    setShowContinueModal(false);
+    setPositiveExamples('');
+    setNegativeExamples('');
+    setShowPositiveFeedback(false);
+    setShowNegativeFeedback(false);
+    setCustomTone('');
+    setSelectedTone('Normal');
+    setSelectedLanguage('English');
+    setSelectedPersona('');
+    setShowPersonas(false);
+    setSelectedTargetAudience('');
+    setShowTargetAudience(false);
   };
 
   const generateOptimizedPrompt = async () => {
@@ -466,8 +1416,8 @@ function MainApp() {
       return;
     }
 
-    if (selectedTechniques.length === 0) {
-      setOptimizedPrompt('Please select at least one optimization technique.');
+    if (!selectedTechnique) {
+      setOptimizedPrompt('Please select an optimization technique.');
       return;
     }
 
@@ -483,21 +1433,20 @@ function MainApp() {
     
       if (useAI) {
         // Use AI optimization with feedback, language, and tone
-        const technique = techniques[selectedTechniques[0]]; // Use first selected technique for AI
+        const technique = techniques[selectedTechnique];
         optimized = await technique.optimizeWithAI(rawPrompt, selectedProvider, selectedModel, {
           positiveExamples,
           negativeExamples,
           language: selectedLanguage,
-          tone: selectedTone === 'Custom' ? customTone : selectedTone
+          tone: selectedTone === 'Custom' ? customTone : selectedTone,
+          targetAudience: selectedTargetAudience
         });
       } else {
         // Use template-based optimization with language and tone
-        selectedTechniques.forEach(techniqueKey => {
-          const technique = techniques[techniqueKey];
-          if (technique) {
-            optimized = technique.generatePrompt(optimized);
-          }
-        });
+        const technique = techniques[selectedTechnique];
+        if (technique) {
+          optimized = technique.generatePrompt(optimized);
+        }
         
         // Add language and tone instructions to template-based optimization
         const languageInstruction = selectedLanguage !== 'English' ? `\n\nIMPORTANT: Respond in ${selectedLanguage}.` : '';
@@ -510,6 +1459,30 @@ function MainApp() {
       }
 
     setOptimizedPrompt(optimized);
+    
+    // Gamification: Update stats after successful optimization
+    const promptScore = calculatePromptScore(rawPrompt);
+    const xpGained = calculateXP(promptScore);
+    
+    const newStats = {
+      ...userStats,
+      xp: userStats.xp + xpGained,
+      totalPrompts: userStats.totalPrompts + 1,
+      lastActivity: new Date().toISOString()
+    };
+    
+    // Update streak
+    newStats.streak = updateStreak(newStats);
+    
+    // Calculate new level
+    newStats.level = calculateLevel(newStats.xp);
+    
+    // Check for achievements
+    const statsWithAchievements = checkAchievements(newStats);
+    
+    // Save to localStorage and update state
+    saveStats(statsWithAchievements);
+    
     } catch (error) {
       setOptimizedPrompt(`Error: ${error.message}`);
     } finally {
@@ -566,6 +1539,72 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
     navigator.clipboard.writeText(testOutput);
   };
 
+  // Continue Building function
+  const continueBuilding = async () => {
+    if (!continuePrompt.trim()) {
+      return;
+    }
+
+    console.log('Continue Building started:', {
+      continuePrompt,
+      selectedTechnique,
+      useAI,
+      availableProviders,
+      selectedProvider,
+      selectedModel
+    });
+
+    setIsContinueLoading(true);
+    
+    try {
+      // Create a refined prompt instruction
+      const refinementInstruction = `Please enhance and refine the following prompt by incorporating these additional requirements:
+
+CURRENT PROMPT:
+${optimizedPrompt}
+
+ADDITIONAL REQUIREMENTS:
+${continuePrompt}
+
+Please provide an improved version that maintains the original intent while incorporating the new requirements.`;
+
+      // Use the same technique and settings as before
+      const selectedTechniqueKey = selectedTechnique || 'zero-shot';
+      const technique = techniques[selectedTechniqueKey];
+      
+      console.log('Using technique:', selectedTechniqueKey, technique);
+      
+      let result;
+      if (useAI && technique.optimizeWithAI && availableProviders.length > 0) {
+        console.log('Using AI optimization...');
+        const feedback = {
+          positiveExamples,
+          negativeExamples,
+          language: selectedLanguage,
+          tone: selectedTone === 'Custom' ? customTone : selectedTone,
+          targetAudience: selectedTargetAudience
+        };
+        result = await technique.optimizeWithAI(refinementInstruction, selectedProvider, selectedModel, feedback);
+      } else {
+        console.log('Using fallback method...');
+        // Fallback to simple concatenation if AI is not available
+        result = `${optimizedPrompt}
+
+${continuePrompt}`;
+      }
+
+      console.log('Continue Building result:', result);
+      setOptimizedPrompt(result);
+      setShowContinueModal(false);
+      setContinuePrompt('');
+    } catch (error) {
+      console.error('Continue building error:', error);
+      setOptimizedPrompt(`Error during refinement: ${error.message}`);
+    } finally {
+      setIsContinueLoading(false);
+    }
+  };
+
   const getProviderDisplayName = (provider) => {
     switch (provider) {
       case AI_PROVIDERS.OPENAI:
@@ -575,6 +1614,38 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
       default:
         return provider;
     }
+  };
+
+  // Persona functions
+  const handlePersonaSelect = (categoryKey, personaKey) => {
+    const persona = personas[categoryKey].items[personaKey];
+    const currentPrompt = rawPrompt.trim();
+    
+    // If there's already content, prepend the persona
+    if (currentPrompt) {
+      setRawPrompt(`${persona.prompt}\n\n${currentPrompt}`);
+    } else {
+      setRawPrompt(persona.prompt);
+    }
+    
+    setSelectedPersona(persona.name);
+    setShowPersonas(false);
+  };
+
+  const clearPersona = () => {
+    setSelectedPersona('');
+    // Don't clear the prompt as user might want to keep other content
+  };
+
+  // Target Audience functions
+  const handleTargetAudienceSelect = (categoryKey, audienceKey) => {
+    const audience = targetAudiences[categoryKey].items[audienceKey];
+    setSelectedTargetAudience(audience.name);
+    setShowTargetAudience(false);
+  };
+
+  const clearTargetAudience = () => {
+    setSelectedTargetAudience('');
   };
 
   return (
@@ -612,6 +1683,28 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
 
             {/* Navigation */}
             <div className="flex items-center space-x-4">
+              {/* Gamification Stats */}
+              <div className="hidden sm:flex items-center space-x-3 bg-white/50 px-3 py-1 rounded-full">
+                <div className="flex items-center space-x-1">
+                  <span className="text-yellow-500">⭐</span>
+                  <span className="text-xs font-medium text-gray-700">Lv.{userStats.level}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <span className="text-blue-500">💎</span>
+                  <span className="text-xs font-medium text-gray-700">{userStats.xp} XP</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <span className="text-orange-500">🔥</span>
+                  <span className="text-xs font-medium text-gray-700">{userStats.streak}d</span>
+                </div>
+                <button 
+                  onClick={() => setShowGameStats(!showGameStats)}
+                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  📊
+                </button>
+              </div>
+
                           <SignedIn>
               <UserButton 
                 appearance={{
@@ -656,11 +1749,11 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                    {Object.entries(techniques).map(([key, technique]) => (
                      <label key={key} className="flex items-center space-x-2 cursor-pointer p-1 rounded hover:bg-gray-50 transition-colors">
                        <input
-                         type="checkbox"
+                         type="radio"
+                         name="technique"
                          className="h-2.5 w-2.5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                         checked={selectedTechniques.includes(key)}
+                         checked={selectedTechnique === key}
                          onChange={() => handleTechniqueToggle(key)}
-                         disabled={useAI && selectedTechniques.length === 1 && selectedTechniques.includes(key)}
                        />
                        <div className="flex-1 flex items-center justify-between">
                          <span className="text-xs font-medium text-gray-900">{technique.name}</span>
@@ -740,13 +1833,6 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                    </div>
                  </div>
                  
-                 {useAI && selectedTechniques.length > 1 && (
-                   <div className="mt-2 p-1.5 bg-yellow-50 border border-yellow-200 rounded">
-                     <p className="text-xs text-yellow-800">
-                       AI perfection uses only the first selected technique.
-                     </p>
-                   </div>
-                 )}
                  
                  {/* Feedback Examples */}
                  <div className="border-t pt-3 mt-3">
@@ -808,6 +1894,182 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                        )}
                      </div>
                    </div>
+                 </div>
+
+                 {/* Personas Library */}
+                 <div className="border-t pt-3 mt-3">
+                   <div className="flex items-center justify-between mb-2">
+                     <h3 className="text-xs font-semibold text-gray-800">Personas</h3>
+                     {selectedPersona && (
+                       <button
+                         onClick={clearPersona}
+                         className="text-xs text-gray-500 hover:text-red-500 transition-colors"
+                         title="Clear persona"
+                       >
+                         Clear
+                       </button>
+                     )}
+                   </div>
+                   
+                                       <div className="relative">
+                      <button
+                        ref={personaButtonRef}
+                        onClick={() => setShowPersonas(!showPersonas)}
+                        className="w-full flex items-center justify-between p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                       <div className="flex items-center space-x-2">
+                         <span className="text-sm">🎭</span>
+                         <span className="text-xs text-gray-700">
+                           {selectedPersona || 'Select a persona...'}
+                         </span>
+                       </div>
+                       <svg className={`w-3 h-3 text-gray-500 transition-transform ${showPersonas ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                       </svg>
+                     </button>
+                     
+                                           {/* Personas Dropdown */}
+                      {showPersonas && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-50"
+                            onClick={() => setShowPersonas(false)}
+                          ></div>
+                          <div 
+                            className="bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto" 
+                            style={personaDropdownStyle}
+                          >
+                           {Object.entries(personas).map(([categoryKey, category]) => (
+                             <div key={categoryKey} className="p-2">
+                               <div className="text-xs font-semibold text-gray-700 mb-2 px-2 py-1 bg-gray-50 rounded">
+                                 {category.name}
+                               </div>
+                               <div className="space-y-1">
+                                 {Object.entries(category.items).map(([personaKey, persona]) => (
+                                   <button
+                                     key={personaKey}
+                                     onClick={() => handlePersonaSelect(categoryKey, personaKey)}
+                                     className="w-full text-left px-3 py-2 hover:bg-blue-50 hover:text-blue-700 rounded transition-colors group"
+                                   >
+                                     <div className="flex items-center space-x-2">
+                                       <span className="text-sm">{persona.emoji}</span>
+                                       <div className="flex-1">
+                                         <div className="text-xs font-medium text-gray-800 group-hover:text-blue-700">
+                                           {persona.name}
+                                         </div>
+                                         <div className="text-xs text-gray-500 group-hover:text-blue-600 line-clamp-2">
+                                           {persona.description}
+                                         </div>
+                                       </div>
+                                     </div>
+                                   </button>
+                                 ))}
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                       </>
+                     )}
+                   </div>
+                   
+                   {selectedPersona && (
+                     <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                       <div className="flex items-center space-x-2">
+                         <span className="text-xs">🎭</span>
+                         <span className="text-xs font-medium text-blue-800">
+                           Active: {selectedPersona}
+                         </span>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+
+                 {/* Target Audience */}
+                 <div className="border-t pt-3 mt-3">
+                   <div className="flex items-center justify-between mb-2">
+                     <h3 className="text-xs font-semibold text-gray-800">Target Audience</h3>
+                     {selectedTargetAudience && (
+                       <button
+                         onClick={clearTargetAudience}
+                         className="text-xs text-gray-500 hover:text-red-500 transition-colors"
+                         title="Clear target audience"
+                       >
+                         Clear
+                       </button>
+                     )}
+                   </div>
+                   
+                   <div className="relative">
+                     <button
+                       ref={audienceButtonRef}
+                       onClick={() => setShowTargetAudience(!showTargetAudience)}
+                       className="w-full flex items-center justify-between p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                     >
+                       <div className="flex items-center space-x-2">
+                         <span className="text-sm">🎯</span>
+                         <span className="text-xs text-gray-700">
+                           {selectedTargetAudience || 'Select target audience...'}
+                         </span>
+                       </div>
+                       <svg className={`w-3 h-3 text-gray-500 transition-transform ${showTargetAudience ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                       </svg>
+                     </button>
+                     
+                     {/* Target Audience Dropdown */}
+                     {showTargetAudience && (
+                       <>
+                         <div 
+                           className="fixed inset-0 z-50"
+                           onClick={() => setShowTargetAudience(false)}
+                         ></div>
+                         <div 
+                           className="bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto" 
+                           style={audienceDropdownStyle}
+                         >
+                           {Object.entries(targetAudiences).map(([categoryKey, category]) => (
+                             <div key={categoryKey} className="p-2">
+                               <div className="text-xs font-semibold text-gray-700 mb-2 px-2 py-1 bg-gray-50 rounded">
+                                 {category.name}
+                               </div>
+                               <div className="space-y-1">
+                                 {Object.entries(category.items).map(([audienceKey, audience]) => (
+                                   <button
+                                     key={audienceKey}
+                                     onClick={() => handleTargetAudienceSelect(categoryKey, audienceKey)}
+                                     className="w-full text-left px-3 py-2 hover:bg-green-50 hover:text-green-700 rounded transition-colors group"
+                                   >
+                                     <div className="flex items-center space-x-2">
+                                       <span className="text-sm">{audience.emoji}</span>
+                                       <div className="flex-1">
+                                         <div className="text-xs font-medium text-gray-800 group-hover:text-green-700">
+                                           {audience.name}
+                                         </div>
+                                         <div className="text-xs text-gray-500 group-hover:text-green-600 line-clamp-2">
+                                           {audience.description}
+                                         </div>
+                                       </div>
+                                     </div>
+                                   </button>
+                                 ))}
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                       </>
+                     )}
+                   </div>
+                   
+                   {selectedTargetAudience && (
+                     <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                       <div className="flex items-center space-x-2">
+                         <span className="text-xs">🎯</span>
+                         <span className="text-xs font-medium text-green-800">
+                           Target: {selectedTargetAudience}
+                         </span>
+                       </div>
+                     </div>
+                   )}
                  </div>
                </div>
 
@@ -871,7 +2133,77 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
 
                  {/* Main Content Area - Combined Rectangle (Full Height) */}
                  <div className="relative flex-1 p-6">
-                   <div className="border border-gray-300 rounded-lg bg-white overflow-hidden h-full">
+                   {/* Templates Section */}
+                   <div className="mb-4 flex items-center space-x-2">
+                     <div className="relative">
+                       <button
+                         onClick={() => setShowTemplates(!showTemplates)}
+                         className="flex items-center space-x-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                       >
+                         <span>📄</span>
+                         <span>Templates</span>
+                         <svg className={`w-4 h-4 transition-transform ${showTemplates ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                         </svg>
+                       </button>
+                       
+                       {/* Templates Dropdown */}
+                       {showTemplates && (
+                         <>
+                           <div 
+                             className="fixed inset-0 z-10"
+                             onClick={() => setShowTemplates(false)}
+                           ></div>
+                           <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-96 overflow-y-auto">
+                             {Object.entries(templates).map(([categoryKey, category]) => (
+                               <div key={categoryKey} className="p-2">
+                                 <div className="text-xs font-semibold text-gray-700 mb-2 px-2 py-1 bg-gray-50 rounded">
+                                   {category.name}
+                                 </div>
+                                 <div className="space-y-1">
+                                   {Object.entries(category.items).map(([templateKey, template]) => (
+                                     <button
+                                       key={templateKey}
+                                       onClick={() => handleTemplateSelect(categoryKey, templateKey)}
+                                       className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded transition-colors"
+                                     >
+                                       {template.name}
+                                     </button>
+                                   ))}
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         </>
+                       )}
+                     </div>
+                     
+                     {selectedTemplate && (
+                       <div className="flex items-center space-x-2">
+                         <span className="text-sm text-blue-600 font-medium">
+                           {selectedTemplate}
+                         </span>
+                         <button
+                           onClick={clearTemplate}
+                           className="text-gray-400 hover:text-red-500 transition-colors"
+                           title="Clear template"
+                         >
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                           </svg>
+                         </button>
+                       </div>
+                     )}
+                     
+                     <button
+                       onClick={clearTemplate}
+                       className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                     >
+                       Clear
+                     </button>
+                   </div>
+                   
+                   <div className="border border-gray-300 rounded-lg bg-white overflow-hidden" style={{height: 'calc(100% - 60px)'}}>
                      <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
                        {/* Input Side */}
                        <div className="relative border-r border-gray-300 h-full">
@@ -921,14 +2253,31 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                            )}
                          </div>
                          
-                         {/* Copy Button - Bottom Right of Output */}
+                         {/* Copy, Favorite & Continue Building Buttons - Bottom Right of Output */}
                          {optimizedPrompt && !isLoading && (
-                           <div className="absolute bottom-4 right-4">
+                           <div className="absolute bottom-4 right-4 flex space-x-2">
                              <button
                                onClick={copyToClipboard}
                                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
                              >
                                📋 Copy
+                             </button>
+                             <button
+                               onClick={addToFavorites}
+                               className={`px-4 py-2 rounded-lg transition-colors font-medium text-sm ${
+                                 isCurrentPromptFavorited() 
+                                   ? 'bg-red-100 hover:bg-red-200 text-red-700' 
+                                   : 'bg-pink-100 hover:bg-pink-200 text-pink-700'
+                               }`}
+                               title={isCurrentPromptFavorited() ? 'Already in favorites' : 'Add to favorites'}
+                             >
+                               {isCurrentPromptFavorited() ? '❤️ Favorited' : '🤍 Favorite'}
+                             </button>
+                             <button
+                               onClick={() => setShowContinueModal(true)}
+                               className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                             >
+                               ➕ Continue Building
                              </button>
                            </div>
                          )}
@@ -940,7 +2289,19 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
 
                {/* Right Side Options - QuillBot Style */}
                <div className="absolute -right-16 top-4 flex flex-col space-y-2 z-20">
-
+                 {/* Favorites Button */}
+                 <button
+                   onClick={() => {
+                     setRightSidebarContent('favorites');
+                     setShowRightSidebar(true);
+                   }}
+                   className="w-10 h-10 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center transition-colors shadow-sm"
+                   title="Favorite Prompts"
+                 >
+                   <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                   </svg>
+                 </button>
 
                  {/* Settings Button */}
                  <button
@@ -986,6 +2347,7 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                      {/* Header */}
                      <div className="flex items-center justify-between p-4 border-b">
                        <h3 className="text-lg font-semibold text-gray-800">
+                         {rightSidebarContent === 'favorites' && 'Favorite Prompts'}
                          {rightSidebarContent === 'settings' && 'Settings'}
                          {rightSidebarContent === 'help' && 'Help & Info'}
                        </h3>
@@ -1001,6 +2363,79 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
 
                      {/* Content */}
                      <div className="p-4 h-full overflow-y-auto">
+                       {rightSidebarContent === 'favorites' && (
+                         <div className="space-y-4">
+                           {favoritePrompts.length === 0 ? (
+                             <div className="text-center py-8">
+                               <div className="text-gray-400 mb-2">
+                                 <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                 </svg>
+                               </div>
+                               <p className="text-gray-500 text-sm">No favorite prompts yet</p>
+                               <p className="text-gray-400 text-xs mt-1">Click the heart button to save prompts</p>
+                             </div>
+                           ) : (
+                             <div className="space-y-3">
+                               {favoritePrompts.map((favorite) => (
+                                 <div key={favorite.id} className="bg-gray-50 rounded-lg p-3 border">
+                                   <div className="flex items-start justify-between mb-2">
+                                     <div className="flex-1">
+                                       <div className="text-xs text-gray-500 mb-1">
+                                         {new Date(favorite.createdAt).toLocaleDateString()} • {favorite.technique}
+                                       </div>
+                                       <div className="text-xs text-gray-600 mb-2 line-clamp-2">
+                                         <strong>Original:</strong> {favorite.originalPrompt.substring(0, 100)}
+                                         {favorite.originalPrompt.length > 100 && '...'}
+                                       </div>
+                                       <div className="text-xs text-gray-800 line-clamp-3">
+                                         <strong>Optimized:</strong> {favorite.optimizedPrompt.substring(0, 150)}
+                                         {favorite.optimizedPrompt.length > 150 && '...'}
+                                       </div>
+                                     </div>
+                                     <button
+                                       onClick={() => removeFromFavorites(favorite.id)}
+                                       className="ml-2 text-red-400 hover:text-red-600 transition-colors"
+                                       title="Remove from favorites"
+                                     >
+                                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                         <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                       </svg>
+                                     </button>
+                                   </div>
+                                   <div className="flex items-center justify-between">
+                                     <div className="flex items-center space-x-2">
+                                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                         Score: {favorite.score}
+                                       </span>
+                                       <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                         {favorite.language}
+                                       </span>
+                                       <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                         {favorite.tone}
+                                       </span>
+                                     </div>
+                                     <button
+                                       onClick={() => {
+                                         setRawPrompt(favorite.originalPrompt);
+                                         setOptimizedPrompt(favorite.optimizedPrompt);
+                                         setSelectedTechnique(favorite.technique);
+                                         setSelectedLanguage(favorite.language);
+                                         setSelectedTone(favorite.tone);
+                                         setShowRightSidebar(false);
+                                       }}
+                                       className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded transition-colors"
+                                     >
+                                       Use
+                                     </button>
+                                   </div>
+                                 </div>
+                               ))}
+                             </div>
+                           )}
+                         </div>
+                       )}
+
                        {rightSidebarContent === 'settings' && (
                          <div className="space-y-4">
                            <div>
@@ -1050,6 +2485,142 @@ IMPORTANT: Keep your response concise and to the point. Aim for 2-3 sentences ma
                  </>
                )}
              </div>
+
+             {/* Continue Building Modal */}
+             {showContinueModal && (
+               <>
+                 <div 
+                   className="fixed inset-0 bg-black bg-opacity-50 z-50"
+                   onClick={() => setShowContinueModal(false)}
+                 ></div>
+                 <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+                   <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                     <h3 className="text-lg font-semibold text-gray-800 mb-4">Continue Building</h3>
+                     <p className="text-sm text-gray-600 mb-4">
+                       Add refinements or additional requirements to enhance your prompt:
+                     </p>
+                     <textarea
+                       value={continuePrompt}
+                       onChange={(e) => setContinuePrompt(e.target.value)}
+                       placeholder="E.g., Make it more formal, add examples, include specific constraints..."
+                       className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                     />
+                     <div className="flex justify-end space-x-3 mt-4">
+                       <button
+                         onClick={() => setShowContinueModal(false)}
+                         className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors text-sm"
+                       >
+                         Cancel
+                       </button>
+                       <button
+                         onClick={continueBuilding}
+                         disabled={!continuePrompt.trim() || isContinueLoading}
+                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                       >
+                         {isContinueLoading ? 'Enhancing...' : 'Continue Building'}
+                       </button>
+                     </div>
+                   </div>
+                 </div>
+               </>
+             )}
+
+             {/* Gamification Stats Modal */}
+             {showGameStats && (
+               <>
+                 <div 
+                   className="fixed inset-0 bg-black bg-opacity-50 z-50"
+                   onClick={() => setShowGameStats(false)}
+                 ></div>
+                 <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+                   <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                     <div className="flex items-center justify-between mb-4">
+                       <h3 className="text-lg font-semibold text-gray-800">Your Progress</h3>
+                       <button
+                         onClick={() => setShowGameStats(false)}
+                         className="text-gray-400 hover:text-gray-600"
+                       >
+                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                         </svg>
+                       </button>
+                     </div>
+                     
+                     {/* Level Progress */}
+                     <div className="mb-6">
+                       <div className="flex items-center justify-between mb-2">
+                         <span className="text-sm font-medium text-gray-700">Level {userStats.level}</span>
+                         <span className="text-xs text-gray-500">{userStats.xp % 200}/200 XP</span>
+                       </div>
+                       <div className="w-full bg-gray-200 rounded-full h-2">
+                         <div 
+                           className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+                           style={{ width: `${(userStats.xp % 200) / 200 * 100}%` }}
+                         ></div>
+                       </div>
+                     </div>
+
+                     {/* Stats Grid */}
+                     <div className="grid grid-cols-2 gap-4 mb-6">
+                       <div className="text-center p-3 bg-blue-50 rounded-lg">
+                         <div className="text-2xl font-bold text-blue-600">{userStats.totalPrompts}</div>
+                         <div className="text-xs text-gray-600">Total Prompts</div>
+                       </div>
+                       <div className="text-center p-3 bg-orange-50 rounded-lg">
+                         <div className="text-2xl font-bold text-orange-600">{userStats.streak}</div>
+                         <div className="text-xs text-gray-600">Day Streak</div>
+                       </div>
+                       <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                         <div className="text-2xl font-bold text-yellow-600">{userStats.xp}</div>
+                         <div className="text-xs text-gray-600">Total XP</div>
+                       </div>
+                       <div className="text-center p-3 bg-purple-50 rounded-lg">
+                         <div className="text-2xl font-bold text-purple-600">{userStats.badges.length}</div>
+                         <div className="text-xs text-gray-600">Badges</div>
+                       </div>
+                     </div>
+
+                     {/* Recent Badges */}
+                     {userStats.badges.length > 0 && (
+                       <div>
+                         <h4 className="text-sm font-medium text-gray-700 mb-3">Recent Achievements</h4>
+                         <div className="space-y-2 max-h-32 overflow-y-auto">
+                           {userStats.badges.slice(-5).reverse().map((badge, index) => (
+                             <div key={badge.id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
+                               <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                                 <span className="text-white text-xs">🏆</span>
+                               </div>
+                               <div>
+                                 <div className="text-sm font-medium text-gray-800">{badge.name}</div>
+                                 <div className="text-xs text-gray-600">{badge.description}</div>
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 </div>
+               </>
+             )}
+
+             {/* Achievement Notification */}
+             {recentAchievement && (
+               <div className="fixed top-20 right-4 z-50 animate-bounce">
+                 <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-4 rounded-lg shadow-lg max-w-sm">
+                   <div className="flex items-center space-x-3">
+                     <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                       <span className="text-lg">🏆</span>
+                     </div>
+                     <div>
+                       <div className="font-semibold text-sm">Achievement Unlocked!</div>
+                       <div className="text-sm opacity-90">{recentAchievement.name}</div>
+                       <div className="text-xs opacity-75">{recentAchievement.description}</div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             )}
 
              {/* Test Section */}
              <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">

@@ -69,6 +69,15 @@ TONE REQUIREMENT:
 The optimized prompt should include instructions for a ${feedback.tone.toLowerCase()} tone with ${toneDesc}.`;
     }
 
+    // Add target audience instruction if provided
+    if (feedback.targetAudience && feedback.targetAudience.trim()) {
+      systemPrompt += `
+
+TARGET AUDIENCE REQUIREMENT:
+The optimized prompt should be tailored for: ${feedback.targetAudience}
+Adjust the information retrieval instructions, source citation format, and explanation complexity to be appropriate for this specific audience.`;
+    }
+
     systemPrompt += `
 
 Optimize the following prompt using RAG technique:`;
